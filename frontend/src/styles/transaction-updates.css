@@ -1,0 +1,138 @@
+.transaction-updates {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.transaction-updates h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.updates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.update-item {
+  padding: 12px;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #ddd;
+  transition: all 0.2s ease;
+}
+
+.update-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.update-item.status-approved {
+  border-left-color: #28a745;
+}
+
+.update-item.status-rejected {
+  border-left-color: #dc3545;
+}
+
+.update-item.status-completed {
+  border-left-color: #17a2b8;
+}
+
+.update-item.status-failed {
+  border-left-color: #dc3545;
+}
+
+.update-item.status-awaiting_approval {
+  border-left-color: #ffc107;
+}
+
+.update-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.transaction-id {
+  font-weight: 600;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-badge.approved {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.completed {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-badge.failed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.awaiting_approval {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.update-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.amount {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.timestamp {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.notes {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #ddd;
+  font-size: 0.9rem;
+  color: #555;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .update-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .amount {
+    font-size: 1rem;
+  }
+}

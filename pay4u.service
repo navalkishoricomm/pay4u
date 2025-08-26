@@ -1,0 +1,41 @@
+[Unit]
+Description=Pay4U Backend Service
+Documentation=https://github.com/your-username/pay4u
+After=network.target mongod.service
+Wants=mongod.service
+
+[Service]
+Type=simple
+User=pay4u
+Group=pay4u
+WorkingDirectory=/opt/pay4u/app/backend
+Environment=NODE_ENV=production
+Environment=PORT=5000
+EnvironmentFile=/opt/pay4u/app/backend/.env
+ExecStart=/usr/bin/node server.js
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+SyslogIdentifier=pay4u-backend
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/pay4u/app/backend/uploads
+ReadWritePaths=/opt/pay4u/logs
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
