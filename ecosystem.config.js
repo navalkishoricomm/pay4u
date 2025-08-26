@@ -44,7 +44,7 @@ module.exports = {
       user: 'pay4u',
       host: 'your-server-ip',
       ref: 'origin/main',
-      repo: 'https://github.com/your-username/pay4u.git',
+      repo: 'https://github.com/navalkishoricomm/pay4u.git',
       path: '/opt/pay4u/app',
       'pre-deploy-local': '',
       'post-deploy': 'npm ci --production && pm2 reload ecosystem.config.js --env production',
