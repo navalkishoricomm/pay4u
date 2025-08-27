@@ -20,7 +20,7 @@ APP_PATH="$APP_DIR/app"
 LOG_DIR="$APP_DIR/logs"
 BACKUP_DIR="$APP_DIR/backups"
 REPO_URL="https://github.com/navalkishoricomm/pay4u.git"
-DOMAIN="your-domain.com"
+DOMAIN="pay4u.co.in"
 
 # Functions
 log_info() {
