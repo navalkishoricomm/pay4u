@@ -9,7 +9,7 @@ This repository contains a complete digital wallet and recharge application with
 **Automated Installation:**
 ```bash
 # Download and run the deployment script
-wget https://raw.githubusercontent.com/your-username/pay4u/main/deploy-ubuntu.sh
+wget https://raw.githubusercontent.com/navalkishoricomm/pay4u/main/deploy-ubuntu.sh
 chmod +x deploy-ubuntu.sh
 sudo ./deploy-ubuntu.sh
 ```

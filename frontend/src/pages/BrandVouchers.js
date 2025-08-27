@@ -30,7 +30,7 @@ const BrandVouchers = () => {
 
   const fetchVouchers = async () => {
     try {
-      const response = await fetch('/api/vouchers/brands');
+      const response = await fetch('http://localhost:5000/api/vouchers/brands');
       const data = await response.json();
       if (data.success) {
         setVouchers(data.data.filter(voucher => voucher.isActive));
@@ -45,7 +45,7 @@ const BrandVouchers = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/vouchers/categories');
+      const response = await fetch('http://localhost:5000/api/vouchers/categories');
       const data = await response.json();
       if (data.success) {
         setCategories(['All', ...data.data]);
@@ -58,7 +58,7 @@ const BrandVouchers = () => {
   const fetchWalletBalance = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/wallet/balance', {
+      const response = await fetch('http://localhost:5000/api/wallet/balance', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -74,21 +74,29 @@ const BrandVouchers = () => {
 
   const fetchDenominations = async (voucherId) => {
     try {
-      const response = await fetch(`/api/vouchers/brands/${voucherId}/denominations`);
+      const response = await fetch(`http://localhost:5000/api/vouchers/brands/${voucherId}/denominations`);
       const data = await response.json();
       if (data.success) {
-        setDenominations(data.data.filter(denom => denom.isActive && denom.remainingQuantity > 0));
+        // Filter active denominations with available quantity
+        const availableDenominations = data.data.filter(denom => {
+          const remainingQuantity = denom.totalAvailableQuantity - denom.soldQuantity;
+          return denom.isActive && remainingQuantity > 0;
+        });
+        setDenominations(availableDenominations);
+      } else {
+        setDenominations([]);
       }
     } catch (error) {
       console.error('Error fetching denominations:', error);
       notifyError('Failed to load denominations');
+      setDenominations([]);
     }
   };
 
   const fetchUserOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/vouchers/my-orders', {
+      const response = await fetch('http://localhost:5000/api/vouchers/my-orders', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -128,7 +136,7 @@ const BrandVouchers = () => {
     setPurchasing(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/vouchers/purchase', {
+      const response = await fetch('http://localhost:5000/api/vouchers/purchase', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +185,7 @@ const BrandVouchers = () => {
   const handleDownloadVoucher = async (orderId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/vouchers/orders/${orderId}/download-file`, {
+      const response = await fetch(`http://localhost:5000/api/vouchers/orders/${orderId}/download-file`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -267,46 +275,73 @@ const BrandVouchers = () => {
         </div>
       </div>
 
-      {/* Enhanced vouchers grid */}
-      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginBottom: '2rem'}}>
+      {/* Ultra-compact vouchers grid with round icons */}
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: '1rem', marginBottom: '1.5rem', justifyItems: 'center'}}>
         {filteredVouchers.map(voucher => (
-          <div key={voucher._id} className="card" style={{overflow: 'hidden', transition: 'all 0.2s ease'}}>
-            <div style={{height: '180px', overflow: 'hidden', background: 'var(--light-color)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <div 
+            key={voucher._id} 
+            style={{
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              cursor: 'pointer', 
+              transition: 'all 0.2s ease',
+              padding: '0.5rem'
+            }}
+            onClick={() => {
+              handleVoucherSelect(voucher);
+              setShowModal(true);
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            <div style={{
+              width: '60px', 
+              height: '60px', 
+              borderRadius: '50%', 
+              overflow: 'hidden', 
+              background: 'var(--light-color)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              marginBottom: '0.5rem',
+              border: '2px solid var(--primary-color)',
+              boxShadow: '0 3px 8px rgba(0,0,0,0.1)'
+            }}>
               <img 
                 src={voucher.image} 
                 alt={voucher.brandName} 
                 style={{width: '100%', height: '100%', objectFit: 'cover'}}
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = `<div style="color: var(--text-secondary); font-size: 0.875rem; text-align: center;"><i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>No Image</div>`;
+                  e.target.parentElement.innerHTML = `<i class="fas fa-gift" style="font-size: 1.5rem; color: var(--primary-color);"></i>`;
                 }}
               />
             </div>
-            <div style={{padding: '1rem'}}>
-              <div style={{marginBottom: '0.75rem'}}>
-                <h3 style={{margin: 0, fontSize: '1.125rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.25rem'}}>
-                  {voucher.brandName}
-                </h3>
-                <span style={{fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px'}}>
-                  {voucher.category}
-                </span>
-              </div>
-              
-              <p style={{margin: '0 0 1rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
-                {voucher.description}
-              </p>
-              
-              <button 
-                 className="btn btn-primary touch-target"
-                 onClick={() => {
-                   setSelectedVoucher(voucher);
-                   setShowModal(true);
-                 }}
-                 style={{width: '100%', padding: '0.75rem', fontSize: '0.875rem', fontWeight: '600'}}
-               >
-                 <i className="fas fa-eye" style={{marginRight: '0.5rem'}}></i>
-                 View Details
-               </button>
+            <div style={{textAlign: 'center'}}>
+              <h4 style={{
+                margin: 0, 
+                fontSize: '0.625rem', 
+                fontWeight: '600', 
+                color: 'var(--text-primary)', 
+                marginBottom: '0.125rem',
+                lineHeight: '1.1'
+              }}>
+                {voucher.brandName}
+              </h4>
+              <span style={{
+                fontSize: '0.5rem', 
+                color: 'var(--primary-color)', 
+                fontWeight: '500', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.25px'
+              }}>
+                {voucher.category}
+              </span>
             </div>
           </div>
         ))}
@@ -357,28 +392,38 @@ const BrandVouchers = () => {
                   <p>No denominations available at the moment.</p>
                 ) : (
                   <div className="denominations-grid">
-                    {denominations.map(denomination => (
-                      <div key={denomination._id} className="denomination-card">
-                        <div className="denomination-value">₹{denomination.denomination}</div>
-                        <div className="discount-info">
-                          <span className="discount">{denomination.discountPercentage}% OFF</span>
-                          <span className="final-price">₹{denomination.discountedPrice}</span>
+                    {denominations.map(denomination => {
+                      const remainingQuantity = denomination.totalAvailableQuantity - denomination.soldQuantity;
+                      const discountedPrice = denomination.denomination * (1 - denomination.discountPercentage / 100);
+                      return (
+                        <div key={denomination._id} className="denomination-card">
+                          <div className="denomination-value">₹{denomination.denomination}</div>
+                          <div className="discount-info">
+                            <span className="discount">{denomination.discountPercentage}% OFF</span>
+                            <span className="final-price">₹{discountedPrice.toFixed(2)}</span>
+                          </div>
+                          <div className="availability">
+                            <span>Available: {remainingQuantity}</span>
+                            <span>Max per user: {denomination.maxQuantityPerUser}</span>
+                          </div>
+                          <button 
+                            className="btn btn-primary btn-sm"
+                            onClick={() => {
+                              // Add calculated fields to denomination object
+                              const denominationWithCalculations = {
+                                ...denomination,
+                                remainingQuantity,
+                                discountedPrice
+                              };
+                              setSelectedDenomination(denominationWithCalculations);
+                              setShowPurchaseModal(true);
+                            }}
+                          >
+                            Buy Now
+                          </button>
                         </div>
-                        <div className="availability">
-                          <span>Available: {denomination.remainingQuantity}</span>
-                          <span>Max per user: {denomination.maxQuantityPerUser}</span>
-                        </div>
-                        <button 
-                          className="btn btn-primary btn-sm"
-                          onClick={() => {
-                            setSelectedDenomination(denomination);
-                            setShowPurchaseModal(true);
-                          }}
-                        >
-                          Buy Now
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

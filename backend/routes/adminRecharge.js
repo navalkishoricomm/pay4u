@@ -13,7 +13,7 @@ router.use(authController.protect);
 router.use(authController.restrictTo('admin'));
 
 // API Provider Routes
-router.route('/api-providers')
+router.route('/providers')
   .get(
     [
       query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
@@ -104,7 +104,7 @@ router.route('/api-providers')
     adminRechargeController.createApiProvider
   );
 
-router.route('/api-providers/:id')
+router.route('/providers/:id')
   .get(
     [
       param('id').isMongoId().withMessage('Invalid API provider ID')
@@ -173,7 +173,7 @@ router.route('/api-providers/:id')
     adminRechargeController.deleteApiProvider
   );
 
-router.post('/api-providers/:id/test',
+router.post('/providers/:id/test',
   [
     param('id').isMongoId().withMessage('Invalid API provider ID')
   ],

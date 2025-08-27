@@ -10,13 +10,16 @@ const ApiProviders = () => {
   const [editingProvider, setEditingProvider] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
+    displayName: '',
     baseUrl: '',
     apiKey: '',
     apiSecret: '',
+    authType: 'bearer',
     endpoints: {
-      mobile: '',
-      dth: '',
-      status: ''
+      mobileRecharge: '',
+      dthRecharge: '',
+      checkStatus: '',
+      getOperators: ''
     },
     requestFormat: 'json',
     responseFormat: 'json',
@@ -24,13 +27,14 @@ const ApiProviders = () => {
     retryAttempts: 3,
     isActive: true,
     priority: 1,
-    successCodes: ['200', 'SUCCESS'],
-    failureCodes: ['400', 'FAILED'],
+    successCodes: ['200', 'SUCCESS', 'ACCEPTED'],
+    failureCodes: ['FAILED', 'ERROR', 'REJECTED'],
+    pendingCodes: ['PENDING', 'PROCESSING', 'IN_PROGRESS'],
     commission: 0,
     minAmount: 10,
     maxAmount: 10000,
     supportedServices: ['mobile', 'dth'],
-    isTestMode: false
+    testMode: false
   });
 
   useEffect(() => {
@@ -108,23 +112,31 @@ const ApiProviders = () => {
     setEditingProvider(provider);
     setFormData({
       name: provider.name,
+      displayName: provider.displayName || '',
       baseUrl: provider.baseUrl,
       apiKey: provider.apiKey,
       apiSecret: provider.apiSecret,
-      endpoints: provider.endpoints,
+      authType: provider.authType || 'bearer',
+      endpoints: provider.endpoints || {
+        mobileRecharge: '',
+        dthRecharge: '',
+        checkStatus: '',
+        getOperators: ''
+      },
       requestFormat: provider.requestFormat,
       responseFormat: provider.responseFormat,
       timeout: provider.timeout,
       retryAttempts: provider.retryAttempts,
       isActive: provider.isActive,
       priority: provider.priority,
-      successCodes: provider.successCodes,
-      failureCodes: provider.failureCodes,
+      successCodes: provider.successCodes || ['200', 'SUCCESS', 'ACCEPTED'],
+      failureCodes: provider.failureCodes || ['FAILED', 'ERROR', 'REJECTED'],
+      pendingCodes: provider.pendingCodes || ['PENDING', 'PROCESSING', 'IN_PROGRESS'],
       commission: provider.commission,
       minAmount: provider.minAmount,
       maxAmount: provider.maxAmount,
       supportedServices: provider.supportedServices,
-      isTestMode: provider.isTestMode
+      testMode: provider.testMode || false
     });
     setShowModal(true);
   };
@@ -133,13 +145,16 @@ const ApiProviders = () => {
     setEditingProvider(null);
     setFormData({
       name: '',
+      displayName: '',
       baseUrl: '',
       apiKey: '',
       apiSecret: '',
+      authType: 'bearer',
       endpoints: {
-        mobile: '',
-        dth: '',
-        status: ''
+        mobileRecharge: '',
+        dthRecharge: '',
+        checkStatus: '',
+        getOperators: ''
       },
       requestFormat: 'json',
       responseFormat: 'json',
@@ -147,13 +162,14 @@ const ApiProviders = () => {
       retryAttempts: 3,
       isActive: true,
       priority: 1,
-      successCodes: ['200', 'SUCCESS'],
-      failureCodes: ['400', 'FAILED'],
+      successCodes: ['200', 'SUCCESS', 'ACCEPTED'],
+      failureCodes: ['FAILED', 'ERROR', 'REJECTED'],
+      pendingCodes: ['PENDING', 'PROCESSING', 'IN_PROGRESS'],
       commission: 0,
       minAmount: 10,
       maxAmount: 10000,
       supportedServices: ['mobile', 'dth'],
-      isTestMode: false
+      testMode: false
     });
   };
 
@@ -168,7 +184,7 @@ const ApiProviders = () => {
           [child]: value
         }
       }));
-    } else if (name === 'successCodes' || name === 'failureCodes' || name === 'supportedServices') {
+    } else if (name === 'successCodes' || name === 'failureCodes' || name === 'pendingCodes' || name === 'supportedServices') {
       setFormData(prev => ({
         ...prev,
         [name]: value.split(',').map(item => item.trim())
@@ -255,16 +271,31 @@ const ApiProviders = () => {
             <form onSubmit={handleSubmit} className="provider-form">
               <div className="form-row">
                 <div className="form-group">
-                  <label>Provider Name</label>
+                  <label>Provider Name (Internal)</label>
                   <input
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     required
+                    placeholder="e.g., provider_api_v1"
                   />
                 </div>
                 
+                <div className="form-group">
+                  <label>Display Name</label>
+                  <input
+                    type="text"
+                    name="displayName"
+                    value={formData.displayName}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="e.g., Provider API Service"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-row">
                 <div className="form-group">
                   <label>Base URL</label>
                   <input
@@ -274,6 +305,20 @@ const ApiProviders = () => {
                     onChange={handleInputChange}
                     required
                   />
+                </div>
+                
+                <div className="form-group">
+                  <label>Auth Type</label>
+                  <select
+                    name="authType"
+                    value={formData.authType}
+                    onChange={handleInputChange}
+                  >
+                    <option value="bearer">Bearer Token</option>
+                    <option value="basic">Basic Auth</option>
+                    <option value="api_key">API Key</option>
+                    <option value="custom">Custom</option>
+                  </select>
                 </div>
               </div>
               
@@ -305,32 +350,51 @@ const ApiProviders = () => {
                 <h3>Endpoints</h3>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Mobile Recharge</label>
+                    <label>Mobile Recharge Endpoint</label>
                     <input
                       type="text"
-                      name="endpoints.mobile"
-                      value={formData.endpoints.mobile}
+                      name="endpoints.mobileRecharge"
+                      value={formData.endpoints.mobileRecharge}
                       onChange={handleInputChange}
+                      required
+                      placeholder="/api/mobile-recharge"
                     />
                   </div>
                   
                   <div className="form-group">
-                    <label>DTH Recharge</label>
+                    <label>DTH Recharge Endpoint</label>
                     <input
                       type="text"
-                      name="endpoints.dth"
-                      value={formData.endpoints.dth}
+                      name="endpoints.dthRecharge"
+                      value={formData.endpoints.dthRecharge}
                       onChange={handleInputChange}
+                      required
+                      placeholder="/api/dth-recharge"
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Status Check Endpoint</label>
+                    <input
+                      type="text"
+                      name="endpoints.checkStatus"
+                      value={formData.endpoints.checkStatus}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="/api/check-status"
                     />
                   </div>
                   
                   <div className="form-group">
-                    <label>Status Check</label>
+                    <label>Get Operators Endpoint</label>
                     <input
                       type="text"
-                      name="endpoints.status"
-                      value={formData.endpoints.status}
+                      name="endpoints.getOperators"
+                      value={formData.endpoints.getOperators}
                       onChange={handleInputChange}
+                      placeholder="/api/operators"
                     />
                   </div>
                 </div>
@@ -409,6 +473,46 @@ const ApiProviders = () => {
                 </div>
               </div>
               
+              <div className="form-section">
+                <h3>Response Codes</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Success Codes (comma-separated)</label>
+                    <input
+                      type="text"
+                      name="successCodes"
+                      value={formData.successCodes.join(', ')}
+                      onChange={handleInputChange}
+                      placeholder="200, SUCCESS, ACCEPTED"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Failure Codes (comma-separated)</label>
+                    <input
+                      type="text"
+                      name="failureCodes"
+                      value={formData.failureCodes.join(', ')}
+                      onChange={handleInputChange}
+                      placeholder="FAILED, ERROR, REJECTED"
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Pending Codes (comma-separated)</label>
+                    <input
+                      type="text"
+                      name="pendingCodes"
+                      value={formData.pendingCodes.join(', ')}
+                      onChange={handleInputChange}
+                      placeholder="PENDING, PROCESSING, IN_PROGRESS"
+                    />
+                  </div>
+                </div>
+              </div>
+              
               <div className="form-row">
                 <div className="form-group checkbox-group">
                   <label>
@@ -426,8 +530,8 @@ const ApiProviders = () => {
                   <label>
                     <input
                       type="checkbox"
-                      name="isTestMode"
-                      checked={formData.isTestMode}
+                      name="testMode"
+                      checked={formData.testMode}
                       onChange={handleInputChange}
                     />
                     Test Mode

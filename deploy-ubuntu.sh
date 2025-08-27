@@ -178,10 +178,40 @@ setup_environment() {
     
     # Backend environment
     if [[ ! -f "$APP_PATH/backend/.env" ]]; then
-        sudo -u $APP_USER cp $APP_PATH/backend/.env.production $APP_PATH/backend/.env
+        # Check if .env.production exists
+        if [[ -f "$APP_PATH/backend/.env.production" ]]; then
+            sudo -u $APP_USER cp $APP_PATH/backend/.env.production $APP_PATH/backend/.env
+            log_success "Copied .env.production to .env"
+        else
+            log_error "Environment file .env.production not found at $APP_PATH/backend/.env.production"
+            log_info "Creating basic .env file..."
+            
+            # Create basic .env file
+            sudo -u $APP_USER cat > $APP_PATH/backend/.env << EOF
+# Production Environment Configuration
+# Database
+MONGO_URI=mongodb://localhost:27017/pay4u_production
+
+# Server Configuration
+PORT=5000
+NODE_ENV=production
+
+# JWT Configuration
+JWT_SECRET=temp_jwt_secret_change_this
+JWT_EXPIRE=7d
+
+# CORS Configuration
+CLIENT_URL=http://$DOMAIN
+
+# API Keys (Replace with actual production keys)
+RECHARGE_API_KEY=your_production_recharge_api_key
+RECHARGE_API_URL=https://api.rechargeservice.com
+EOF
+        fi
         
         # Generate random JWT secret
         JWT_SECRET=$(openssl rand -base64 32)
+        sudo -u $APP_USER sed -i "s/temp_jwt_secret_change_this/$JWT_SECRET/g" $APP_PATH/backend/.env
         sudo -u $APP_USER sed -i "s/your_super_secure_jwt_secret_key_here_change_this_in_production/$JWT_SECRET/g" $APP_PATH/backend/.env
         
         log_success "Environment variables configured"
