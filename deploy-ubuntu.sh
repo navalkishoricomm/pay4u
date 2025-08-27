@@ -211,8 +211,10 @@ EOF
         
         # Generate random JWT secret
         JWT_SECRET=$(openssl rand -base64 32)
-        sudo -u $APP_USER sed -i "s/temp_jwt_secret_change_this/$JWT_SECRET/g" $APP_PATH/backend/.env
-        sudo -u $APP_USER sed -i "s/your_super_secure_jwt_secret_key_here_change_this_in_production/$JWT_SECRET/g" $APP_PATH/backend/.env
+        # Escape special characters in JWT_SECRET for sed
+        JWT_SECRET_ESCAPED=$(echo "$JWT_SECRET" | sed 's/[[\/.*^$()+?{|]/\\&/g')
+        sudo -u $APP_USER sed -i "s/temp_jwt_secret_change_this/$JWT_SECRET_ESCAPED/g" $APP_PATH/backend/.env
+        sudo -u $APP_USER sed -i "s/your_super_secure_jwt_secret_key_here_change_this_in_production/$JWT_SECRET_ESCAPED/g" $APP_PATH/backend/.env
         
         log_success "Environment variables configured"
     else
