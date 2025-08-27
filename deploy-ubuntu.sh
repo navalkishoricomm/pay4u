@@ -19,7 +19,7 @@ APP_DIR="/opt/pay4u"
 APP_PATH="$APP_DIR/app"
 LOG_DIR="$APP_DIR/logs"
 BACKUP_DIR="$APP_DIR/backups"
-REPO_URL="https://github.com/your-username/pay4u.git"
+REPO_URL="https://github.com/navalkishoricomm/pay4u.git"
 DOMAIN="your-domain.com"
 
 # Functions
