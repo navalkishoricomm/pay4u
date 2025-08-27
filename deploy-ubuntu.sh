@@ -227,10 +227,14 @@ install_dependencies() {
     
     # Backend dependencies
     cd $APP_PATH/backend
+    log_info "Updating backend package-lock.json..."
+    sudo -u $APP_USER npm install --package-lock-only
     sudo -u $APP_USER npm ci --production
     
     # Frontend dependencies and build
     cd $APP_PATH/frontend
+    log_info "Updating frontend package-lock.json..."
+    sudo -u $APP_USER npm install --package-lock-only
     sudo -u $APP_USER npm ci
     sudo -u $APP_USER npm run build
     
