@@ -236,7 +236,19 @@ install_dependencies() {
     log_info "Updating frontend package-lock.json..."
     sudo -u $APP_USER npm install --package-lock-only
     sudo -u $APP_USER npm ci
+    
+    log_info "Building React application..."
     sudo -u $APP_USER npm run build
+    
+    # Verify build was successful
+    if [ ! -f "$APP_PATH/frontend/build/index.html" ]; then
+        log_error "Build failed: index.html not found in build directory"
+        exit 1
+    fi
+    
+    # Set proper permissions for build directory
+    chown -R $APP_USER:$APP_USER $APP_PATH/frontend/build
+    chmod -R 755 $APP_PATH/frontend/build
     
     log_success "Dependencies installed and frontend built successfully"
 }
