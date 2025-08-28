@@ -15,7 +15,7 @@ module.exports = {
         PORT: 5000,
         MONGO_URI: 'mongodb://localhost:27017/pay4u_production',
         JWT_SECRET: 'your_super_secure_jwt_secret_key_here_change_this_in_production',
-        JWT_EXPIRE: '7d'
+        JWT_EXPIRE: 604800
       },
       error_file: '/opt/pay4u/logs/backend-error.log',
       out_file: '/opt/pay4u/logs/backend-out.log',
