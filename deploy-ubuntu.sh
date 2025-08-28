@@ -282,6 +282,13 @@ install_dependencies() {
     chown -R $APP_USER:$APP_USER $APP_PATH/frontend/build
     chmod -R 755 $APP_PATH/frontend/build
     
+    # Fix directory permissions for Nginx access (prevents 403 errors)
+    log_info "Setting proper directory permissions for Nginx access..."
+    chmod 755 $APP_DIR
+    chmod 755 $APP_PATH
+    chmod 755 $APP_PATH/frontend
+    chmod 755 $APP_PATH/frontend/build
+    
     log_success "Dependencies installed and frontend built successfully"
 }
 
