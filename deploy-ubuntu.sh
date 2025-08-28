@@ -209,7 +209,7 @@ NODE_ENV=production
 
 # JWT Configuration
 JWT_SECRET=temp_jwt_secret_change_this
-JWT_EXPIRE=7d
+JWT_EXPIRES_IN=604800
 
 # CORS Configuration
 CLIENT_URL=http://$DOMAIN
