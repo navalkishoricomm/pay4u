@@ -4,8 +4,24 @@ const Wallet = require('../models/Wallet');
 
 // Helper function to sign JWT token
 const signToken = (id) => {
+  // Handle different JWT expiration formats
+  let expiresIn = process.env.JWT_EXPIRES_IN || process.env.JWT_EXPIRE || '604800';
+  
+  // Convert string numbers to actual numbers for JWT library compatibility
+  if (/^\d+$/.test(expiresIn)) {
+    expiresIn = parseInt(expiresIn, 10);
+  }
+  
+  console.log('JWT Config:', {
+    JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
+    JWT_EXPIRE: process.env.JWT_EXPIRE,
+    finalExpiresIn: expiresIn,
+    type: typeof expiresIn
+  });
+  
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
+    expiresIn: expiresIn,
   });
 };
 
