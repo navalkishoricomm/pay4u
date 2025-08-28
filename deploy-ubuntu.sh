@@ -235,14 +235,35 @@ install_dependencies() {
     cd $APP_PATH/frontend
     log_info "Updating frontend package-lock.json..."
     sudo -u $APP_USER npm install --package-lock-only
-    sudo -u $APP_USER npm ci
+    
+    log_info "Installing frontend dependencies..."
+    if ! sudo -u $APP_USER npm ci; then
+        log_error "Failed to install frontend dependencies"
+        exit 1
+    fi
     
     log_info "Building React application..."
-    sudo -u $APP_USER npm run build
+    if ! sudo -u $APP_USER npm run build; then
+        log_error "React build process failed"
+        exit 1
+    fi
+    
+    # Check if build directory was created
+    if [ ! -d "$APP_PATH/frontend/build" ]; then
+        log_error "Build directory was not created: $APP_PATH/frontend/build"
+        log_info "Attempting to create build directory manually..."
+        sudo -u $APP_USER mkdir -p $APP_PATH/frontend/build
+    fi
     
     # Verify build was successful
     if [ ! -f "$APP_PATH/frontend/build/index.html" ]; then
         log_error "Build failed: index.html not found in build directory"
+        log_info "Contents of frontend directory:"
+        ls -la $APP_PATH/frontend/
+        if [ -d "$APP_PATH/frontend/build" ]; then
+            log_info "Contents of build directory:"
+            ls -la $APP_PATH/frontend/build/
+        fi
         exit 1
     fi
     
