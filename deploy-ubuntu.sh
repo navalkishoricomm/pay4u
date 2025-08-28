@@ -164,10 +164,21 @@ clone_repository() {
     
     if [[ -d "$APP_PATH" ]]; then
         log_info "Repository already exists, pulling latest changes..."
+        
+        # Fix Git ownership issues
+        log_info "Fixing Git repository ownership..."
+        chown -R $APP_USER:$APP_USER $APP_PATH
+        sudo -u $APP_USER git config --global --add safe.directory $APP_PATH
+        
         cd $APP_PATH
         sudo -u $APP_USER git pull
     else
+        log_info "Cloning fresh repository..."
         sudo -u $APP_USER git clone $REPO_URL $APP_PATH
+        
+        # Set proper ownership
+        chown -R $APP_USER:$APP_USER $APP_PATH
+        sudo -u $APP_USER git config --global --add safe.directory $APP_PATH
     fi
     
     log_success "Repository cloned/updated successfully"
