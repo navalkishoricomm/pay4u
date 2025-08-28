@@ -12,14 +12,6 @@ const signToken = (id) => {
     expiresIn = parseInt(expiresIn, 10);
   }
   
-  console.log('JWT Config:', {
-    JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
-    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
-    JWT_EXPIRE: process.env.JWT_EXPIRE,
-    finalExpiresIn: expiresIn,
-    type: typeof expiresIn
-  });
-  
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: expiresIn,
   });
