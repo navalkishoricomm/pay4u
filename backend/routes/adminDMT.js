@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const DMTTransaction = require('../models/DmtTransaction');
+const DmtTransaction = require('../models/DmtTransaction');
 const User = require('../models/User');
-const DMTRemitter = require('../models/DmtRemitter');
-const DMTBeneficiary = require('../models/DmtBeneficiary');
+const DmtRemitter = require('../models/DmtRemitter');
+const DmtBeneficiary = require('../models/DmtBeneficiary');
 const dmtService = require('../services/dmtService');
 const authController = require('../controllers/authController');
 const mongoose = require('mongoose');
@@ -15,7 +15,7 @@ router.use(authController.restrictTo('admin'));
 // Get DMT statistics
 router.get('/stats', async (req, res) => {
   try {
-    const stats = await DMTTransaction.aggregate([
+    const stats = await DmtTransaction.aggregate([
       {
         $group: {
           _id: null,
@@ -189,7 +189,7 @@ router.get('/transactions', async (req, res) => {
 
     // Get total count
     const countPipeline = [...pipeline, { $count: 'total' }];
-    const countResult = await DMTTransaction.aggregate(countPipeline);
+    const countResult = await DmtTransaction.aggregate(countPipeline);
     const total = countResult[0]?.total || 0;
 
     // Add pagination
@@ -198,7 +198,7 @@ router.get('/transactions', async (req, res) => {
     pipeline.push({ $limit: parseInt(limit) });
 
     // Execute query
-    const transactions = await DMTTransaction.aggregate(pipeline);
+    const transactions = await DmtTransaction.aggregate(pipeline);
 
     const pages = Math.ceil(total / parseInt(limit));
 
@@ -228,7 +228,7 @@ router.post('/transaction/:transactionId/check-status', async (req, res) => {
   try {
     const { transactionId } = req.params;
 
-    const transaction = await DMTTransaction.findOne({ transactionId });
+    const transaction = await DmtTransaction.findOne({ transactionId });
     if (!transaction) {
       return res.status(404).json({
         success: false,
@@ -265,7 +265,7 @@ router.post('/transactions/bulk-check-status', async (req, res) => {
       });
     }
 
-    const transactions = await DMTTransaction.find({
+    const transactions = await DmtTransaction.find({
       _id: { $in: transactionIds }
     });
 
@@ -431,7 +431,7 @@ router.get('/transactions/export', async (req, res) => {
     // Limit to prevent memory issues
     pipeline.push({ $limit: 10000 });
 
-    const transactions = await DMTTransaction.aggregate(pipeline);
+    const transactions = await DmtTransaction.aggregate(pipeline);
 
     // Generate CSV
     const csvHeaders = [
@@ -500,7 +500,7 @@ router.get('/remitter/:remitterId', async (req, res) => {
   try {
     const { remitterId } = req.params;
 
-    const remitter = await DMTRemitter.findById(remitterId)
+    const remitter = await DmtRemitter.findById(remitterId)
       .populate('user', 'name email mobile')
       .populate('beneficiaries');
 
@@ -555,12 +555,12 @@ router.get('/remitters', async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const [remitters, total] = await Promise.all([
-      DMTRemitter.find(filter)
+      DmtRemitter.find(filter)
         .populate('user', 'name email mobile')
         .sort(sortObj)
         .skip(skip)
         .limit(parseInt(limit)),
-      DMTRemitter.countDocuments(filter)
+      DmtRemitter.countDocuments(filter)
     ]);
 
     const pages = Math.ceil(total / parseInt(limit));
