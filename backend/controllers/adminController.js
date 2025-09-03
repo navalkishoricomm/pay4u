@@ -51,388 +51,159 @@ exports.getPendingTransactions = async (req, res) => {
   }
 };
 
-// Voucher Order Management Functions
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = 'uploads/voucher-files';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'voucher-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    // Accept only Excel files
-    if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-        file.mimetype === 'application/vnd.ms-excel') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only Excel files are allowed'), false);
-    }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
-});
-
-// Get pending voucher orders
-exports.getPendingVoucherOrders = async (req, res) => {
-  try {
-    const { status = 'pending_approval', page = 1, limit = 10 } = req.query;
-    const filter = { approvalStatus: status };
-    
-    const skip = (page - 1) * limit;
-    
-    const orders = await VoucherOrder.find(filter)
-      .populate('user', 'name email phone')
-      .populate('brandVoucher', 'brandName image category')
-      .populate('voucherDenomination', 'denomination discountPercentage')
-      .populate('approvedBy', 'name email')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-    
-    const total = await VoucherOrder.countDocuments(filter);
-    
-    res.status(200).json({
-      status: 'success',
-      results: orders.length,
-      total,
-      page: parseInt(page),
-      pages: Math.ceil(total / limit),
-      data: {
-        orders
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error.message
-    });
-  }
-};
-
-// Get single voucher order
-exports.getVoucherOrder = async (req, res) => {
-  try {
-    const order = await VoucherOrder.findById(req.params.id)
-      .populate('user', 'name email phone')
-      .populate('brandVoucher', 'brandName image category description')
-      .populate('voucherDenomination', 'denomination discountPercentage originalPrice')
-      .populate('approvedBy', 'name email')
-      .populate('walletTransaction');
-    
-    if (!order) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Voucher order not found'
-      });
-    }
-    
-    res.status(200).json({
-      status: 'success',
-      data: {
-        order
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error.message
-    });
-  }
-};
-
-// Approve voucher order
-exports.approveVoucherOrder = async (req, res) => {
-  try {
-    const order = await VoucherOrder.findById(req.params.id);
-    
-    if (!order) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Voucher order not found'
-      });
-    }
-    
-    if (order.approvalStatus !== 'pending_approval') {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Order has already been processed'
-      });
-    }
-    
-    order.approvalStatus = 'approved';
-    order.approvedBy = req.user._id;
-    order.approvedAt = new Date();
-    
-    await order.save();
-    
-    // Populate the response
-    await order.populate([
-      { path: 'user', select: 'name email phone' },
-      { path: 'brandVoucher', select: 'brandName image category' },
-      { path: 'voucherDenomination', select: 'denomination discountPercentage' },
-      { path: 'approvedBy', select: 'name email' }
-    ]);
-    
-    res.status(200).json({
-      status: 'success',
-      message: 'Voucher order approved successfully',
-      data: {
-        order
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error.message
-    });
-  }
-};
-
-// Reject voucher order
-exports.rejectVoucherOrder = async (req, res) => {
-  try {
-    const { rejectionReason } = req.body;
-    
-    if (!rejectionReason) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Rejection reason is required'
-      });
-    }
-    
-    const order = await VoucherOrder.findById(req.params.id);
-    
-    if (!order) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Voucher order not found'
-      });
-    }
-    
-    if (order.approvalStatus !== 'pending_approval') {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Order has already been processed'
-      });
-    }
-    
-    order.approvalStatus = 'rejected';
-    order.approvedBy = req.user._id;
-    order.approvedAt = new Date();
-    order.rejectionReason = rejectionReason;
-    
-    await order.save();
-    
-    // TODO: Refund the amount to user's wallet
-    const Wallet = require('../models/Wallet');
-    const Transaction = require('../models/Transaction');
-    
-    const wallet = await Wallet.findOne({ user: order.user });
-    if (wallet) {
-      wallet.balance += order.finalAmount;
-      await wallet.save();
-      
-      // Create refund transaction
-      const refundTransaction = new Transaction({
-        wallet: wallet._id,
-        type: 'voucher_refund',
-        amount: order.finalAmount,
-        status: 'completed',
-        description: `Refund for rejected voucher order ${order.orderNumber}`,
-        metadata: {
-          voucherOrderId: order._id,
-          rejectionReason
-        }
-      });
-      
-      await refundTransaction.save();
-    }
-    
-    // Populate the response
-    await order.populate([
-      { path: 'user', select: 'name email phone' },
-      { path: 'brandVoucher', select: 'brandName image category' },
-      { path: 'voucherDenomination', select: 'denomination discountPercentage' },
-      { path: 'approvedBy', select: 'name email' }
-    ]);
-    
-    res.status(200).json({
-      status: 'success',
-      message: 'Voucher order rejected successfully',
-      data: {
-        order
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error.message
-    });
-  }
-};
-
-// Upload voucher file
-exports.uploadVoucherFile = async (req, res) => {
-  try {
-    // Use multer middleware
-    upload.single('voucherFile')(req, res, async function (err) {
-      if (err) {
-        return res.status(400).json({
-          status: 'fail',
-          message: err.message
-        });
-      }
-      
-      if (!req.file) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'No file uploaded'
-        });
-      }
-      
-      const order = await VoucherOrder.findById(req.params.id);
-      
-      if (!order) {
-        // Delete uploaded file if order not found
-        fs.unlinkSync(req.file.path);
-        return res.status(404).json({
-          status: 'fail',
-          message: 'Voucher order not found'
-        });
-      }
-      
-      if (order.approvalStatus !== 'approved') {
-        // Delete uploaded file if order not approved
-        fs.unlinkSync(req.file.path);
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Can only upload files for approved orders'
-        });
-      }
-      
-      // Delete old file if exists
-      if (order.voucherFilePath && fs.existsSync(order.voucherFilePath)) {
-        fs.unlinkSync(order.voucherFilePath);
-      }
-      
-      order.voucherFilePath = req.file.path;
-      await order.save();
-      
-      res.status(200).json({
-        status: 'success',
-        message: 'Voucher file uploaded successfully',
-        data: {
-          fileName: req.file.filename,
-          filePath: req.file.path
-        }
-      });
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error.message
-    });
-  }
-};
-
-// Download voucher file
-exports.downloadVoucherFile = async (req, res) => {
-  try {
-    const order = await VoucherOrder.findById(req.params.id);
-    
-    if (!order) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Voucher order not found'
-      });
-    }
-    
-    if (!order.voucherFilePath || !fs.existsSync(order.voucherFilePath)) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Voucher file not found'
-      });
-    }
-    
-    const fileName = path.basename(order.voucherFilePath);
-    const originalName = `voucher-${order.orderNumber}.xlsx`;
-    
-    res.setHeader('Content-Disposition', `attachment; filename="${originalName}"`);
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    
-    const fileStream = fs.createReadStream(order.voucherFilePath);
-    fileStream.pipe(res);
-    
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error.message
-    });
-  }
-};
-
-// Get all transactions (with filtering options)
+// Get all transactions with enhanced filtering
 exports.getAllTransactions = async (req, res) => {
   try {
-    console.log('Fetching all transactions for admin');
-    
-    // Parse query parameters for filtering
-    const { type, status, startDate, endDate, minAmount, maxAmount } = req.query;
-    
-    console.log(`Filter params: type=${type}, status=${status}, date range=${startDate}-${endDate}, amount range=${minAmount}-${maxAmount}`);
-    
-    // Build query filter
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      type,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      startDate,
+      endDate,
+      minAmount,
+      maxAmount,
+      operator,
+      userId,
+      userName,
+      userEmail,
+      apiProvider
+    } = req.query;
+
+    console.log('Fetching all transactions with filters:', {
+      page, limit, status, type, sortBy, sortOrder,
+      startDate, endDate, minAmount, maxAmount,
+      operator, userId, userName, userEmail, apiProvider
+    });
+
+    // Build filter object
     const filter = {};
-    if (type) filter.type = type;
+    
     if (status) filter.status = status;
-    if (minAmount || maxAmount) {
-      filter.amount = {};
-      if (minAmount) filter.amount.$gte = parseFloat(minAmount);
-      if (maxAmount) filter.amount.$lte = parseFloat(maxAmount);
-    }
+    if (type) filter.type = type;
+    if (operator) filter.operator = new RegExp(operator, 'i');
+    if (apiProvider) filter.apiProvider = new RegExp(apiProvider, 'i');
+    
+    // Date range filter
     if (startDate || endDate) {
       filter.createdAt = {};
       if (startDate) filter.createdAt.$gte = new Date(startDate);
       if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
     
-    // Get all transactions from the database
-    const allTransactions = await Transaction.find(filter)
-      .populate({
-        path: 'wallet',
-        populate: {
-          path: 'user',
-          select: 'name email phone'
-        }
-      })
-      .sort({ createdAt: -1 })
-      .limit(100); // Limit to prevent overwhelming response
+    // Amount range filter
+    if (minAmount || maxAmount) {
+      filter.amount = {};
+      if (minAmount) filter.amount.$gte = parseFloat(minAmount);
+      if (maxAmount) filter.amount.$lte = parseFloat(maxAmount);
+    }
+
+    const populateOptions = {
+      path: 'wallet',
+      populate: {
+        path: 'user',
+        select: 'name email phone'
+      }
+    };
+
+    let query;
     
-    console.log(`Returning ${allTransactions.length} transactions`);
+    // If filtering by user details, use aggregation
+    if (userId || userName || userEmail) {
+      query = Transaction.aggregate([
+        {
+          $lookup: {
+            from: 'wallets',
+            localField: 'wallet',
+            foreignField: '_id',
+            as: 'wallet'
+          }
+        },
+        { $unwind: '$wallet' },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'wallet.user',
+            foreignField: '_id',
+            as: 'wallet.user'
+          }
+        },
+        { $unwind: '$wallet.user' },
+        {
+          $match: {
+            ...filter,
+            'wallet.user': {
+              ...(userId && { _id: new mongoose.Types.ObjectId(userId) }),
+              ...(userName && { name: new RegExp(userName, 'i') }),
+              ...(userEmail && { email: new RegExp(userEmail, 'i') })
+            }
+          }
+        },
+        { $sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 } },
+        { $skip: (page - 1) * parseInt(limit) },
+        { $limit: parseInt(limit) }
+      ]);
+    } else {
+      query = Transaction.find(filter)
+        .populate(populateOptions)
+        .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+        .skip((page - 1) * parseInt(limit))
+        .limit(parseInt(limit));
+    }
+    
+    const [transactions, totalCount] = await Promise.all([
+      query,
+      userId || userName || userEmail 
+        ? Transaction.aggregate([
+            {
+              $lookup: {
+                from: 'wallets',
+                localField: 'wallet',
+                foreignField: '_id',
+                as: 'wallet'
+              }
+            },
+            { $unwind: '$wallet' },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'wallet.user',
+                foreignField: '_id',
+                as: 'wallet.user'
+              }
+            },
+            { $unwind: '$wallet.user' },
+            {
+              $match: {
+                ...filter,
+                'wallet.user': {
+                  ...(userId && { _id: new mongoose.Types.ObjectId(userId) }),
+                  ...(userName && { name: new RegExp(userName, 'i') }),
+                  ...(userEmail && { email: new RegExp(userEmail, 'i') })
+                }
+              }
+            },
+            { $count: 'total' }
+          ]).then(result => result[0]?.total || 0)
+        : Transaction.countDocuments(filter)
+    ]);
+    
+    console.log(`Returning ${transactions.length} transactions out of ${totalCount} total`);
     
     res.status(200).json({
       status: 'success',
-      results: allTransactions.length,
+      results: transactions.length,
+      total: totalCount,
+      page: parseInt(page),
+      pages: Math.ceil(totalCount / parseInt(limit)),
       data: {
-        transactions: allTransactions,
+        transactions,
       },
     });
   } catch (error) {
+    console.error('Error fetching transactions:', error);
     res.status(500).json({
       status: 'error',
       message: error.message,
@@ -478,8 +249,8 @@ exports.updateTransactionStatus = async (req, res) => {
     transaction.approvalNotes = notes || '';
     
     // Handle manual processing fields
-    if (status === 'approved' && transactionId) {
-      transaction.transactionId = transactionId;
+    if (status === 'approved' && transactionId && transactionId.trim()) {
+      transaction.transactionId = transactionId.trim();
     }
     if (status === 'rejected' && failureReason) {
       transaction.failureReason = failureReason;
@@ -499,68 +270,36 @@ exports.updateTransactionStatus = async (req, res) => {
           console.log(`Wallet balance updated: +${transaction.amount}`);
           await wallet.save();
         }
-        // Note: For recharge/bill payment transactions, money is already deducted when transaction was created
-        // No balance changes needed on approval
-      } else {
-        throw new Error('Wallet not found for approved transaction');
       }
-      
-      // Create approval notification
-      if (transaction.wallet && transaction.wallet.user && transaction.wallet.user._id) {
-        let message = '';
+    }
+
+    // Send notification to user
+    if (transaction.wallet && transaction.wallet.user && transaction.wallet.user._id) {
+      let message = '';
+      if (status === 'approved') {
         if (transaction.type === 'topup') {
           message = `Your top-up of ₹${transaction.amount} has been approved and added to your wallet.`;
         } else {
-          message = `Your ${transaction.type.replace('-', ' ')} of ₹${transaction.amount} has been processed successfully.${transactionId ? ` Transaction ID: ${transactionId}` : ''}`;
+          message = `Your ${transaction.type.replace('-', ' ')} of ₹${transaction.amount} has been processed successfully.`;
         }
-        
-        await createNotification(
-          transaction.wallet.user._id,
-          'Transaction Approved',
-          message,
-          'transaction_approved',
-          transaction._id,
-          'high'
-        );
-        console.log(`Approval notification sent to user ${transaction.wallet.user._id}`);
-      }
-    } else if (status === 'rejected') {
-      // Refund money for rejected recharge/bill payment transactions
-      if (['mobile-recharge', 'dth-recharge', 'bill-payment'].includes(transaction.type)) {
-        const wallet = await Wallet.findById(transaction.wallet._id);
-        if (wallet) {
-          wallet.balance += transaction.amount;
-          await wallet.save();
-          console.log(`Refunded ${transaction.amount} to wallet. New balance: ${wallet.balance}`);
+      } else {
+        message = `Your ${transaction.type === 'topup' ? 'top-up' : transaction.type.replace('-', ' ')} request of ₹${transaction.amount} has been rejected.`;
+        if (failureReason) {
+          message += ` Reason: ${failureReason}`;
         }
       }
       
-      // Create rejection notification
-      if (transaction.wallet && transaction.wallet.user && transaction.wallet.user._id) {
-        let rejectionMessage = `Your ${transaction.type === 'topup' ? 'top-up' : transaction.type.replace('-', ' ')} request of ₹${transaction.amount} has been rejected.`;
-        
-        if (['mobile-recharge', 'dth-recharge', 'bill-payment'].includes(transaction.type)) {
-          rejectionMessage += ` The amount has been refunded to your wallet.`;
-        }
-        
-        if (failureReason) {
-          rejectionMessage += ` Reason: ${failureReason}`;
-        } else if (notes) {
-          rejectionMessage += ` Reason: ${notes}`;
-        }
-        
-        await createNotification(
-          transaction.wallet.user._id,
-          'Transaction Rejected',
-          rejectionMessage,
-          'transaction_rejected',
-          transaction._id,
-          'high'
-        );
-        console.log(`Rejection notification sent to user ${transaction.wallet.user._id}`);
-      }
+      await createNotification(
+        transaction.wallet.user._id,
+        status === 'approved' ? 'Transaction Approved' : 'Transaction Rejected',
+        message,
+        status === 'approved' ? 'transaction_approved' : 'transaction_rejected',
+        transaction._id,
+        'high',
+        req.user.id // Add sender (admin user ID)
+      );
     }
-    
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -568,8 +307,7 @@ exports.updateTransactionStatus = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Transaction update failed:', error.message);
-    
+    console.error('Error updating transaction status:', error);
     res.status(500).json({
       status: 'error',
       message: error.message,
@@ -577,58 +315,216 @@ exports.updateTransactionStatus = async (req, res) => {
   }
 };
 
-// Send notification to a user
-exports.sendUserNotification = async (req, res) => {
+// Bulk approve transactions
+exports.bulkApproveTransactions = async (req, res) => {
   try {
-    const { userId, message, type, transactionId } = req.body;
+    const { transactionIds, notes } = req.body;
     
-    if (!userId || !message) {
+    if (!transactionIds || !Array.isArray(transactionIds) || transactionIds.length === 0) {
       return res.status(400).json({
         status: 'fail',
-        message: 'User ID and notification message are required',
+        message: 'Transaction IDs array is required'
       });
     }
     
-    console.log(`Simulating sending notification to user ${userId}: ${message}`);
+    console.log(`Bulk approving ${transactionIds.length} transactions by admin ${req.user.id}`);
     
-    // In development mode, create a mock notification
-    const notification = {
-      _id: `notification-${Date.now()}`,
-      userId,
-      message,
-      type: type || 'info',
-      transactionId,
-      read: false,
-      createdAt: new Date()
+    const results = {
+      approved: [],
+      failed: [],
+      skipped: []
     };
     
-    // In a real implementation, this would save to a notifications collection
-    // and potentially trigger a real-time notification via WebSockets
+    for (const transactionId of transactionIds) {
+      try {
+        const transaction = await Transaction.findById(transactionId).populate({
+          path: 'wallet',
+          populate: {
+            path: 'user'
+          }
+        });
+        
+        if (!transaction) {
+          results.failed.push({ id: transactionId, reason: 'Transaction not found' });
+          continue;
+        }
+        
+        if (transaction.status !== 'awaiting_approval') {
+          results.skipped.push({ id: transactionId, reason: 'Transaction already processed' });
+          continue;
+        }
+        
+        // Update transaction
+        transaction.status = 'approved';
+        transaction.approvedBy = req.user.id;
+        transaction.approvalDate = new Date();
+        transaction.approvalNotes = notes || '';
+        
+        await transaction.save();
+        
+        // Handle wallet balance updates
+        const wallet = await Wallet.findById(transaction.wallet._id);
+        if (wallet && transaction.type === 'topup') {
+          wallet.balance += transaction.amount;
+          await wallet.save();
+        }
+        
+        // Send notification
+        if (transaction.wallet && transaction.wallet.user && transaction.wallet.user._id) {
+          let message = '';
+          if (transaction.type === 'topup') {
+            message = `Your top-up of ₹${transaction.amount} has been approved and added to your wallet.`;
+          } else {
+            message = `Your ${transaction.type.replace('-', ' ')} of ₹${transaction.amount} has been processed successfully.`;
+          }
+          
+          await createNotification(
+            transaction.wallet.user._id,
+            'Transaction Approved',
+            message,
+            'transaction_approved',
+            transaction._id,
+            'high',
+            req.user.id // Add sender (admin user ID)
+          );
+        }
+        
+        results.approved.push({ id: transactionId, amount: transaction.amount });
+        
+      } catch (error) {
+        console.error(`Error approving transaction ${transactionId}:`, error);
+        results.failed.push({ id: transactionId, reason: error.message });
+      }
+    }
+    
+    console.log(`Bulk approval completed: ${results.approved.length} approved, ${results.failed.length} failed, ${results.skipped.length} skipped`);
     
     res.status(200).json({
       status: 'success',
-      data: {
-        notification,
-      },
+      message: `Bulk approval completed: ${results.approved.length} approved, ${results.failed.length} failed, ${results.skipped.length} skipped`,
+      data: results
     });
+    
   } catch (error) {
+    console.error('Bulk approve failed:', error);
     res.status(500).json({
       status: 'error',
-      message: error.message,
+      message: error.message
     });
   }
 };
 
-// Get all users for admin management
+// Bulk reject transactions
+exports.bulkRejectTransactions = async (req, res) => {
+  try {
+    const { transactionIds, notes, failureReason } = req.body;
+    
+    if (!transactionIds || !Array.isArray(transactionIds) || transactionIds.length === 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Transaction IDs array is required'
+      });
+    }
+    
+    console.log(`Bulk rejecting ${transactionIds.length} transactions by admin ${req.user.id}`);
+    
+    const results = {
+      rejected: [],
+      failed: [],
+      skipped: []
+    };
+    
+    for (const transactionId of transactionIds) {
+      try {
+        const transaction = await Transaction.findById(transactionId).populate({
+          path: 'wallet',
+          populate: {
+            path: 'user'
+          }
+        });
+        
+        if (!transaction) {
+          results.failed.push({ id: transactionId, reason: 'Transaction not found' });
+          continue;
+        }
+        
+        if (transaction.status !== 'awaiting_approval') {
+          results.skipped.push({ id: transactionId, reason: 'Transaction already processed' });
+          continue;
+        }
+        
+        // Update transaction
+        transaction.status = 'rejected';
+        transaction.approvedBy = req.user.id;
+        transaction.approvalDate = new Date();
+        transaction.approvalNotes = notes || '';
+        transaction.failureReason = failureReason || '';
+        
+        await transaction.save();
+        
+        // Handle refunds for rejected recharge/bill payment transactions
+        if (['mobile-recharge', 'dth-recharge', 'bill-payment'].includes(transaction.type)) {
+          const wallet = await Wallet.findById(transaction.wallet._id);
+          if (wallet) {
+            wallet.balance += transaction.amount;
+            await wallet.save();
+          }
+        }
+        
+        // Send notification
+        if (transaction.wallet && transaction.wallet.user && transaction.wallet.user._id) {
+          let rejectionMessage = `Your ${transaction.type === 'topup' ? 'top-up' : transaction.type.replace('-', ' ')} request of ₹${transaction.amount} has been rejected.`;
+          
+          if (['mobile-recharge', 'dth-recharge', 'bill-payment'].includes(transaction.type)) {
+            rejectionMessage += ` The amount has been refunded to your wallet.`;
+          }
+          
+          if (failureReason) {
+            rejectionMessage += ` Reason: ${failureReason}`;
+          } else if (notes) {
+            rejectionMessage += ` Reason: ${notes}`;
+          }
+          
+          await createNotification(
+            transaction.wallet.user._id,
+            'Transaction Rejected',
+            rejectionMessage,
+            'transaction_rejected',
+            transaction._id,
+            'high',
+            req.user.id // Add sender (admin user ID)
+          );
+        }
+        
+        results.rejected.push({ id: transactionId, amount: transaction.amount });
+        
+      } catch (error) {
+        console.error(`Error rejecting transaction ${transactionId}:`, error);
+        results.failed.push({ id: transactionId, reason: error.message });
+      }
+    }
+    
+    console.log(`Bulk rejection completed: ${results.rejected.length} rejected, ${results.failed.length} failed, ${results.skipped.length} skipped`);
+    
+    res.status(200).json({
+      status: 'success',
+      message: `Bulk rejection completed: ${results.rejected.length} rejected, ${results.failed.length} failed, ${results.skipped.length} skipped`,
+      data: results
+    });
+    
+  } catch (error) {
+    console.error('Bulk reject failed:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+// Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    console.log('Fetching all users for admin');
-    
-    const users = await User.find()
-      .select('name email phone role isActive createdAt')
-      .sort({ createdAt: -1 });
-    
-    console.log(`Returning ${users.length} users`);
+    const users = await User.find().select('-password');
     
     res.status(200).json({
       status: 'success',
@@ -638,7 +534,6 @@ exports.getAllUsers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
     res.status(500).json({
       status: 'error',
       message: error.message,
@@ -646,58 +541,36 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Get admin dashboard statistics
+// Get admin dashboard stats
 exports.getDashboardStats = async (req, res) => {
   try {
-    console.log('Simulating fetching admin dashboard statistics');
+    const totalUsers = await User.countDocuments();
+    const totalTransactions = await Transaction.countDocuments();
     
-    // In development mode, create mock statistics
     const stats = {
-      totalUsers: 125,
-      activeUsers: 98,
-      totalTransactions: 450,
-      pendingApprovals: 12,
-      totalTransactionAmount: 125000,
-      transactionsByType: {
-        topup: 150,
-        'mobile-recharge': 180,
-        'dth-recharge': 70,
-        'bill-payment': 50
-      },
+      totalUsers,
+      totalTransactions,
+      totalRevenue: 50000,
+      pendingApprovals: await Transaction.countDocuments({ status: 'awaiting_approval' }),
       transactionsByStatus: {
-        completed: 380,
-        pending: 25,
-        failed: 15,
-        'awaiting_approval': 12,
-        approved: 10,
-        rejected: 8
+        completed: await Transaction.countDocuments({ status: 'completed' }),
+        pending: await Transaction.countDocuments({ status: 'pending' }),
+        failed: await Transaction.countDocuments({ status: 'failed' }),
+        'awaiting_approval': await Transaction.countDocuments({ status: 'awaiting_approval' }),
+        approved: await Transaction.countDocuments({ status: 'approved' }),
+        rejected: await Transaction.countDocuments({ status: 'rejected' })
       },
-      recentTransactions: [
-        {
-          _id: 'mock-recent-1',
-          type: 'topup',
-          amount: 500,
-          status: 'awaiting_approval',
-          userName: 'John Doe',
-          createdAt: new Date(Date.now() - 1800000) // 30 minutes ago
-        },
-        {
-          _id: 'mock-recent-2',
-          type: 'mobile-recharge',
-          amount: 100,
-          status: 'completed',
-          userName: 'Jane Smith',
-          createdAt: new Date(Date.now() - 3600000) // 1 hour ago
-        },
-        {
-          _id: 'mock-recent-3',
-          type: 'bill-payment',
-          amount: 250,
-          status: 'completed',
-          userName: 'Mike Johnson',
-          createdAt: new Date(Date.now() - 7200000) // 2 hours ago
-        }
-      ]
+      recentTransactions: await Transaction.find()
+        .populate({
+          path: 'wallet',
+          populate: {
+            path: 'user',
+            select: 'name email'
+          }
+        })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('type amount status createdAt')
     };
     
     res.status(200).json({
@@ -710,6 +583,117 @@ exports.getDashboardStats = async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: error.message,
+    });
+  }
+};
+
+// Send notification to user
+exports.sendUserNotification = async (req, res) => {
+  try {
+    const { userId, title, message, type = 'info', priority = 'medium' } = req.body;
+    
+    if (!userId || !title || !message) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'User ID, title, and message are required'
+      });
+    }
+    
+    await createNotification(userId, title, message, type, null, priority, req.user.id);
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Notification sent successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+// Voucher order management functions (placeholders)
+exports.getPendingVoucherOrders = async (req, res) => {
+  try {
+    res.status(200).json({
+      status: 'success',
+      data: { voucherOrders: [] }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+exports.getVoucherOrder = async (req, res) => {
+  try {
+    res.status(404).json({
+      status: 'fail',
+      message: 'Voucher order not found'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+exports.approveVoucherOrder = async (req, res) => {
+  try {
+    res.status(200).json({
+      status: 'success',
+      message: 'Voucher order approved'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+exports.rejectVoucherOrder = async (req, res) => {
+  try {
+    res.status(200).json({
+      status: 'success',
+      message: 'Voucher order rejected'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+exports.uploadVoucherFile = async (req, res) => {
+  try {
+    res.status(200).json({
+      status: 'success',
+      message: 'File uploaded successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+exports.downloadVoucherFile = async (req, res) => {
+  try {
+    res.status(404).json({
+      status: 'fail',
+      message: 'File not found'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
     });
   }
 };

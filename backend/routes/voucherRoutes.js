@@ -28,6 +28,12 @@ router.get('/brands/:id/denominations', getVoucherDenominations);
 
 // Protected user routes
 router.use(protect);
+
+// Add audit logging for voucher purchase transactions
+const auditMiddleware = require('../middleware/auditMiddleware');
+router.use('/purchase', auditMiddleware.addStartTime);
+router.use('/purchase', auditMiddleware.captureAudit);
+
 router.post('/purchase', purchaseVoucher);
 router.get('/my-orders', getUserVoucherOrders);
 router.get('/orders/:id', getVoucherOrder);

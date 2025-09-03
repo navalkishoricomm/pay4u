@@ -3,6 +3,7 @@ const adminRechargeController = require('../controllers/adminRechargeController'
 const authController = require('../controllers/authController');
 const { body, param, query } = require('express-validator');
 const validate = require('../middleware/validate');
+const auditMiddleware = require('../middleware/auditMiddleware');
 
 const router = express.Router();
 
@@ -11,6 +12,10 @@ router.use(authController.protect);
 
 // Restrict all routes to admin only
 router.use(authController.restrictTo('admin'));
+
+// Add audit middleware for transaction-related admin actions
+router.use(auditMiddleware.addStartTime);
+router.use(auditMiddleware.captureAudit);
 
 // API Provider Routes
 router.route('/providers')

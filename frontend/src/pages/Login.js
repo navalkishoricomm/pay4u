@@ -88,6 +88,10 @@ const Login = () => {
       </form>
       
       <p className="mt-3 text-center">
+        <Link to="/forgot-password">Forgot Password?</Link>
+      </p>
+      
+      <p className="mt-3 text-center">
         Don't have an account? <Link to="/register">Register</Link>
       </p>
     </div>

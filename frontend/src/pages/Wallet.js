@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useNotification } from '../context/NotificationContext';
+import { useLocation } from '../contexts/LocationContext';
+import withLocationPermission from '../hoc/withLocationPermission';
 
-const Wallet = () => {
+const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) => {
   const [walletData, setWalletData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [topupAmount, setTopupAmount] = useState('');
@@ -11,6 +13,7 @@ const Wallet = () => {
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [selectedAmount, setSelectedAmount] = useState('');
   const { success, info, error: showError } = useNotification();
+  const { getLocationForAPI } = useLocation();
 
   // Quick amount options
   const quickAmounts = [100, 200, 500, 1000, 2000, 5000];
@@ -22,7 +25,7 @@ const Wallet = () => {
 
   const fetchWalletData = async () => {
     try {
-      const response = await axios.get('/api/wallet/my-wallet');
+      const response = await axios.get('/wallet/my-wallet');
       setWalletData(response.data.data.wallet);
     } catch (error) {
       console.error('Error fetching wallet data:', error);
@@ -34,7 +37,7 @@ const Wallet = () => {
 
   const fetchPendingTransactions = async () => {
     try {
-      const response = await axios.get('/api/transactions', {
+      const response = await axios.get('/transactions', {
         params: { status: 'awaiting_approval', type: 'topup' }
       });
       setPendingTransactions(response.data.data.transactions || []);
@@ -56,10 +59,18 @@ const Wallet = () => {
     try {
       // In a real app, this would integrate with a payment gateway
       // For now, we'll just call our API endpoint directly
-      const response = await axios.post('/api/wallet/topup', {
+      const requestData = {
         amount: parseFloat(topupAmount),
         paymentMethod: 'card', // Placeholder
-      });
+      };
+      
+      // Add location data if available
+      const locationInfo = getLocationForAPI();
+      if (locationInfo) {
+        requestData.location = locationInfo;
+      }
+      
+      const response = await axios.post('/wallet/topup', requestData);
       
       // Update pending transactions
       fetchPendingTransactions();
@@ -236,4 +247,7 @@ const Wallet = () => {
   );
 };
 
-export default Wallet;
+export default withLocationPermission(Wallet, {
+  requireLocation: true,
+  showLocationInfo: true
+});

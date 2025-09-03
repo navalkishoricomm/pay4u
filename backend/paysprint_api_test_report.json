@@ -1,0 +1,97 @@
+{
+  "timestamp": "2025-09-03T03:55:16.291Z",
+  "baseURL": "https://api.paysprint.in",
+  "results": {
+    "Base API": {
+      "success": true,
+      "status": 200,
+      "data": {
+        "response": "Un authorised request"
+      },
+      "headers": {
+        "date": "Wed, 03 Sep 2025 03:55:05 GMT",
+        "content-type": "application/json",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "server": "Apache/2.4.58 ()",
+        "x-powered-by": "PHP/8.1.23",
+        "x-frame-options": "DENY",
+        "expires": "Thu, 19 Nov 1981 08:52:00 GMT",
+        "cache-control": "no-store, no-cache, must-revalidate",
+        "pragma": "no-cache",
+        "set-cookie": "ci_session=67eh1llq6rdobut3n7nesfu6ahe4mo4g; expires=Wed, 03-Sep-2025 05:55:05 GMT; Max-Age=7200; path=/; HttpOnly"
+      }
+    },
+    "API v1 Base": {
+      "success": false,
+      "status": 404,
+      "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <title>404 Page Not Founds</title>\n        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\n</head>\n<body>\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\n    <div class=\"content_blk\">\n            </div>    \n</div>\n</body>\n</html>\n",
+      "error": "Request failed with status code 404"
+    },
+    "Service Endpoint": {
+      "success": false,
+      "status": 404,
+      "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <title>404 Page Not Founds</title>\n        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\n</head>\n<body>\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\n    <div class=\"content_blk\">\n            </div>    \n</div>\n</body>\n</html>\n",
+      "error": "Request failed with status code 404"
+    },
+    "Main Balance (NEW)": {
+      "success": false,
+      "status": 401,
+      "data": {
+        "status": false,
+        "response_code": 5,
+        "message": "Authentication failed"
+      },
+      "error": "Request failed with status code 401"
+    },
+    "DMT Base": {
+      "success": false,
+      "status": 404,
+      "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <title>404 Page Not Founds</title>\n        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\n</head>\n<body>\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\n    <div class=\"content_blk\">\n            </div>    \n</div>\n</body>\n</html>\n",
+      "error": "Request failed with status code 404"
+    },
+    "Bank List": {
+      "success": false,
+      "status": 404,
+      "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <title>404 Page Not Founds</title>\n        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\n</head>\n<body>\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\n    <div class=\"content_blk\">\n            </div>    \n</div>\n</body>\n</html>\n",
+      "error": "Request failed with status code 404"
+    },
+    "Remitter Register": {
+      "success": false,
+      "status": 404,
+      "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <title>404 Page Not Founds</title>\n        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\n</head>\n<body>\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\n    <div class=\"content_blk\">\n            </div>    \n</div>\n</body>\n</html>\n",
+      "error": "Request failed with status code 404"
+    },
+    "Beneficiary Register": {
+      "success": false,
+      "status": 404,
+      "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <title>404 Page Not Founds</title>\n        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\n</head>\n<body>\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\n    <div class=\"content_blk\">\n            </div>    \n</div>\n</body>\n</html>\n",
+      "error": "Request failed with status code 404"
+    },
+    "Money Transfer": {
+      "success": false,
+      "status": 404,
+      "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <title>404 Page Not Founds</title>\n        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\n</head>\n<body>\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\n    <div class=\"content_blk\">\n            </div>    \n</div>\n</body>\n</html>\n",
+      "error": "Request failed with status code 404"
+    },
+    "Transaction Status": {
+      "success": false,
+      "status": 404,
+      "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <title>404 Page Not Founds</title>\n        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\n</head>\n<body>\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\n    <div class=\"content_blk\">\n            </div>    \n</div>\n</body>\n</html>\n",
+      "error": "Request failed with status code 404"
+    },
+    "Balance Inquiry": {
+      "success": false,
+      "status": 404,
+      "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <title>404 Page Not Founds</title>\n        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\n</head>\n<body>\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\n    <div class=\"content_blk\">\n            </div>    \n</div>\n</body>\n</html>\n",
+      "error": "Request failed with status code 404"
+    }
+  },
+  "summary": {
+    "total": 11,
+    "successful": 1,
+    "failed": 10,
+    "unauthorized": 1,
+    "notFound": 9
+  }
+}

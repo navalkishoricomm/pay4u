@@ -18,6 +18,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import Wallet from './pages/Wallet';
 import MobileRecharge from './pages/MobileRecharge';
 import DTHRecharge from './pages/DTHRecharge';
@@ -25,6 +27,8 @@ import Recharge from './pages/Recharge';
 import BillPayment from './pages/BillPayment';
 import BrandVouchers from './pages/BrandVouchers';
 import Transactions from './pages/Transactions';
+import MoneyTransfer from './pages/MoneyTransfer';
+import AEPS from './pages/AEPS';
 import NotFound from './pages/NotFound';
 
 // Admin Pages
@@ -39,10 +43,22 @@ import VoucherOrderApprovals from './pages/admin/VoucherOrderApprovals';
 import ApiProviders from './pages/admin/ApiProviders';
 import OperatorConfig from './pages/admin/OperatorConfig';
 import ManualRecharges from './pages/admin/ManualRecharges';
+import DMTTransactions from './pages/admin/DMTTransactions';
+import AdminNotifications from './pages/AdminNotifications';
+import UserNotifications from './components/UserNotifications';
+import ChargeSlabManagement from './components/admin/ChargeSlabManagement';
+import AuditDashboard from './components/admin/AuditDashboard';
 
 // Context
 import { useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { SocketProvider } from './context/SocketContext';
+import { LocationProvider } from './contexts/LocationContext';
+
+// Debug Components
+import AmountInputTest from './debug/AmountInputTest';
+import WalletAPITest from './debug/WalletAPITest';
+import TestRechargeAPI from './debug/TestRechargeAPI';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -83,15 +99,19 @@ const AdminRoute = ({ children }) => {
 
 function App() {
   return (
-    <NotificationProvider>
-      <>
-        <Navbar />
-        <Notification />
-        <main className="container">
+    <LocationProvider>
+      <NotificationProvider>
+        <SocketProvider>
+        <>
+          <Navbar />
+          <Notification />
+          <main className="container">
           <Routes>
           <Route path="/" element={<HomeRoute />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           
           {/* User Routes */}
           <Route 
@@ -143,6 +163,22 @@ function App() {
             } 
           />
           <Route 
+            path="/money-transfer" 
+            element={
+              <ProtectedRoute>
+                <MoneyTransfer />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/aeps" 
+            element={
+              <ProtectedRoute>
+                <AEPS />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/vouchers" 
             element={
               <ProtectedRoute>
@@ -155,6 +191,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Recharge />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/notifications" 
+            element={
+              <ProtectedRoute>
+                <UserNotifications />
               </ProtectedRoute>
             } 
           />
@@ -180,6 +224,14 @@ function App() {
              element={
                <AdminRoute>
                  <AllTransactions />
+               </AdminRoute>
+             } 
+           />
+           <Route 
+             path="/admin/dmt-transactions" 
+             element={
+               <AdminRoute>
+                 <DMTTransactions />
                </AdminRoute>
              } 
            />
@@ -247,12 +299,44 @@ function App() {
                </AdminRoute>
              } 
            />
+           <Route
+              path="/admin/notifications"
+              element={
+                <AdminRoute>
+                  <AdminNotifications />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/charge-slabs"
+              element={
+                <AdminRoute>
+                  <ChargeSlabManagement />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/audit"
+              element={
+                <AdminRoute>
+                  <AuditDashboard />
+                </AdminRoute>
+              }
+            />
+           
+           {/* Debug Routes */}
+                  <Route path="/debug/amount-input" element={<AmountInputTest />} />
+                  <Route path="/debug/wallet-api" element={<WalletAPITest />} />
+                  <Route path="/debug/recharge-api" element={<TestRechargeAPI />} />
+           
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </main>
-        <ToastContainer position="bottom-right" autoClose={3000} />
-      </>
-    </NotificationProvider>
+        </main>
+          <ToastContainer position="bottom-right" autoClose={3000} />
+        </>
+        </SocketProvider>
+      </NotificationProvider>
+    </LocationProvider>
   );
 }
 

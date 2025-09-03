@@ -24,7 +24,7 @@ const MobileRecharge = () => {
 
   const fetchWalletData = async () => {
     try {
-      const response = await axios.get('/api/wallet/my-wallet');
+      const response = await axios.get('/wallet/balance');
       setWalletBalance(response.data.data.wallet.balance);
     } catch (error) {
       console.error('Error fetching wallet data:', error);
@@ -60,7 +60,7 @@ const MobileRecharge = () => {
     setIsProcessing(true);
     
     try {
-      const response = await axios.post('/api/transactions/process', {
+      const response = await axios.post('/transactions/process', {
         type: 'mobile-recharge',
         amount: parseFloat(amount),
         metadata: {

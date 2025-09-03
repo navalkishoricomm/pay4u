@@ -30,7 +30,7 @@ const PendingTransactions = () => {
     const fetchPendingTransactions = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/admin/transactions/pending');
+        const response = await axios.get('/admin/transactions/pending');
         setTransactions(response.data.data.transactions);
         setLoading(false);
       } catch (err) {
@@ -79,7 +79,7 @@ const PendingTransactions = () => {
         ...(transactionId && { transactionId })
       };
       
-      await axios.patch(`/api/admin/transactions/${selectedTransaction._id}`, requestData);
+      await axios.patch(`/admin/transactions/${selectedTransaction._id}`, requestData);
       
       // Update the local state to remove the approved transaction
       setTransactions(transactions.filter(t => t._id !== selectedTransaction._id));
@@ -106,7 +106,7 @@ const PendingTransactions = () => {
         ...(failureReason && { failureReason })
       };
       
-      await axios.patch(`/api/admin/transactions/${selectedTransaction._id}`, requestData);
+      await axios.patch(`/admin/transactions/${selectedTransaction._id}`, requestData);
       
       // Update the local state to remove the rejected transaction
       setTransactions(transactions.filter(t => t._id !== selectedTransaction._id));

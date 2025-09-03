@@ -1,11 +1,16 @@
 const express = require('express');
 const authController = require('../controllers/authController');
 const transactionController = require('../controllers/transactionController');
+const auditMiddleware = require('../middleware/auditMiddleware');
 
 const router = express.Router();
 
 // Protect all routes after this middleware
 router.use(authController.protect);
+
+// Add audit logging for all transaction routes
+router.use(auditMiddleware.addStartTime);
+router.use(auditMiddleware.captureAudit);
 
 router.get('/', transactionController.getUserTransactions);
 router.post('/process', transactionController.processTransactionRequest);

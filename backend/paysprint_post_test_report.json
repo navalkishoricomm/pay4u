@@ -1,0 +1,72 @@
+{
+  "timestamp": "2025-09-03T04:02:08.566Z",
+  "baseURL": "https://api.paysprint.in/api/v1/service",
+  "testType": "POST_REQUEST_BODY_AUTH",
+  "results": {
+    "/balance/balance/mainbalance": {
+      "Direct Credentials": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "bodyConfig": "Direct Credentials"
+      },
+      "Auth Object": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "bodyConfig": "Auth Object"
+      },
+      "Credentials Object": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "bodyConfig": "Credentials Object"
+      },
+      "Token Format": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "bodyConfig": "Token Format"
+      },
+      "Paysprint Standard": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "bodyConfig": "Paysprint Standard"
+      }
+    }
+  },
+  "summary": {
+    "totalTests": 5,
+    "successful": 0,
+    "unauthorized": 5,
+    "notFound": 0,
+    "otherErrors": 0,
+    "workingConfigurations": []
+  }
+}

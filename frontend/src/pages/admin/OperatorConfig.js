@@ -56,7 +56,7 @@ const OperatorConfig = () => {
 
   const fetchOperators = async () => {
     try {
-      const response = await fetch('/api/admin/recharge/operators', {
+      const response = await fetch('/admin/recharge/operators', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -72,7 +72,7 @@ const OperatorConfig = () => {
 
   const fetchProviders = async () => {
     try {
-      const response = await fetch('/api/admin/recharge/providers', {
+      const response = await fetch('/admin/recharge/providers', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -92,8 +92,8 @@ const OperatorConfig = () => {
     e.preventDefault();
     try {
       const url = editingOperator 
-        ? `/api/admin/recharge/operators/${editingOperator._id}`
-        : '/api/admin/recharge/operators';
+        ? `/admin/recharge/operators/${editingOperator._id}`
+        : '/admin/recharge/operators';
       
       const method = editingOperator ? 'PUT' : 'POST';
       
@@ -120,7 +120,7 @@ const OperatorConfig = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this operator configuration?')) {
       try {
-        const response = await fetch(`/api/admin/recharge/operators/${id}`, {
+        const response = await fetch(`/admin/recharge/operators/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`

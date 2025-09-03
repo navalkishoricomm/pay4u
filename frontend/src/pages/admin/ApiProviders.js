@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+// import { useAuth } from '../../context/AuthContext'; // Commented out as not currently used
 import './Admin.css';
 
 const ApiProviders = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Commented out as not currently used
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -43,17 +43,31 @@ const ApiProviders = () => {
 
   const fetchProviders = async () => {
     try {
-      const response = await fetch('/api/admin/recharge/providers', {
+      const response = await fetch('/admin/recharge/providers', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       const data = await response.json();
       if (data.status === 'success') {
-        setProviders(data.data);
+        // Handle the correct response structure from backend
+        if (Array.isArray(data.data?.apiProviders)) {
+          setProviders(data.data.apiProviders);
+        } else if (Array.isArray(data.data)) {
+          setProviders(data.data);
+        } else if (Array.isArray(data.providers)) {
+          setProviders(data.providers);
+        } else {
+          console.error('Invalid providers data structure:', data);
+          setProviders([]);
+        }
+      } else {
+        console.error('API response error:', data);
+        setProviders([]);
       }
     } catch (error) {
       console.error('Error fetching providers:', error);
+      setProviders([]);
     } finally {
       setLoading(false);
     }
@@ -63,8 +77,8 @@ const ApiProviders = () => {
     e.preventDefault();
     try {
       const url = editingProvider 
-        ? `/api/admin/recharge/providers/${editingProvider._id}`
-        : '/api/admin/recharge/providers';
+        ? `/admin/recharge/providers/${editingProvider._id}`
+        : '/admin/recharge/providers';
       
       const method = editingProvider ? 'PUT' : 'POST';
       
@@ -91,7 +105,7 @@ const ApiProviders = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this provider?')) {
       try {
-        const response = await fetch(`/api/admin/recharge/providers/${id}`, {
+        const response = await fetch(`/admin/recharge/providers/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -214,8 +228,9 @@ const ApiProviders = () => {
       </div>
 
       <div className="providers-grid">
-        {providers.map(provider => (
-          <div key={provider._id} className="provider-card">
+        {Array.isArray(providers) && providers.length > 0 ? (
+          providers.map(provider => (
+            <div key={provider._id} className="provider-card">
             <div className="provider-header">
               <h3>{provider.name}</h3>
               <div className="provider-status">
@@ -249,7 +264,18 @@ const ApiProviders = () => {
               </button>
             </div>
           </div>
-        ))}
+        ))
+        ) : (
+          <div className="no-providers">
+            <p>No API providers configured yet.</p>
+            <button 
+              className="btn btn-primary"
+              onClick={() => setShowModal(true)}
+            >
+              Add Your First Provider
+            </button>
+          </div>
+        )}
       </div>
 
       {showModal && (

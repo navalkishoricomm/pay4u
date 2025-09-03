@@ -20,7 +20,7 @@ const ManualRecharges = () => {
   const fetchManualRecharges = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/recharge/manual?status=${filter}`, {
+      const response = await fetch(`/admin/recharge/manual?status=${filter}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -47,7 +47,7 @@ const ManualRecharges = () => {
 
     try {
       setProcessing(true);
-      const response = await fetch(`/api/admin/recharge/manual/${selectedRecharge._id}/${actionType}`, {
+      const response = await fetch(`/admin/recharge/manual/${selectedRecharge._id}/${actionType}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

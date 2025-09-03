@@ -11,6 +11,13 @@ module.exports = (req, res, next) => {
       value: error.value
     }));
     
+    // Log validation errors for debugging
+    console.log('=== VALIDATION ERRORS ===');
+    console.log('Request URL:', req.url);
+    console.log('Request Body:', JSON.stringify(req.body, null, 2));
+    console.log('Validation Errors:', JSON.stringify(errorMessages, null, 2));
+    console.log('========================');
+    
     return next(new AppError('Validation failed', 400, errorMessages));
   }
   

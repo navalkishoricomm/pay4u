@@ -20,7 +20,7 @@ const AdminDashboard = () => {
     const fetchDashboardStats = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/admin/dashboard-stats');
+        const response = await axios.get('/admin/dashboard-stats');
         setStats(response.data.data.stats);
         setLoading(false);
       } catch (err) {
@@ -39,6 +39,10 @@ const AdminDashboard = () => {
 
   if (error) {
     return <div className="error-message">{error}</div>;
+  }
+
+  if (!stats) {
+    return <div className="loading">Loading dashboard data...</div>;
   }
 
   return (
@@ -148,7 +152,7 @@ const AdminDashboard = () => {
               <div style={{
                 fontSize: '0.65rem',
                 color: '#6c757d'
-              }}>₹{stats.totalTransactionAmount.toLocaleString()}</div>
+              }}>₹{stats.totalTransactionAmount ? stats.totalTransactionAmount.toLocaleString() : '0'}</div>
             </div>
             
             <div style={{
@@ -221,7 +225,7 @@ const AdminDashboard = () => {
                 flexDirection: 'column',
                 gap: '0.2rem'
               }}>
-                {Object.entries(stats.transactionsByType).map(([type, count]) => (
+                {Object.entries(stats.transactionsByType || {}).map(([type, count]) => (
                   <div key={type} style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -295,7 +299,7 @@ const AdminDashboard = () => {
                 flexDirection: 'column',
                 gap: '0.2rem'
               }}>
-                {Object.entries(stats.transactionsByStatus).map(([status, count]) => {
+                {Object.entries(stats.transactionsByStatus || {}).map(([status, count]) => {
                   const statusColors = {
                     completed: '#28a745',
                     pending: '#ffc107',
@@ -520,7 +524,7 @@ const AdminDashboard = () => {
               flexDirection: 'column',
               gap: '0.2rem'
             }}>
-              {stats.recentTransactions.map(transaction => {
+              {(stats.recentTransactions || []).map(transaction => {
                 const statusColors = {
                   completed: '#28a745',
                   pending: '#ffc107',
@@ -616,7 +620,7 @@ const AdminDashboard = () => {
                         <span style={{
                           color: '#495057',
                           fontSize: '0.5rem'
-                        }}>{new Date(transaction.createdAt).toLocaleString()}</span>
+                        }}>{transaction.createdAt ? new Date(transaction.createdAt).toLocaleString() : 'N/A'}</span>
                       </div>
                     </div>
                   </div>

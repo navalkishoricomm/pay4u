@@ -35,7 +35,7 @@ const Recharge = () => {
   const fetchOperators = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/recharge/operators', {
+      const response = await fetch('/recharge/operators', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -52,7 +52,7 @@ const Recharge = () => {
   const fetchRechargeHistory = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/recharge/history?limit=5', {
+      const response = await fetch('/recharge/history?limit=5', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -81,7 +81,7 @@ const Recharge = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const endpoint = activeTab === 'mobile' ? '/api/recharge/mobile' : '/api/recharge/dth';
+      const endpoint = activeTab === 'mobile' ? '/recharge/mobile' : '/recharge/dth';
       
       const payload = activeTab === 'mobile' 
         ? {

@@ -10,6 +10,7 @@ const {
 } = require('../controllers/rechargeController');
 const authController = require('../controllers/authController');
 const { body, param, query, validationResult } = require('express-validator');
+const auditMiddleware = require('../middleware/auditMiddleware');
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -59,6 +60,10 @@ const dthRechargeValidation = [
 
 // Protected routes
 router.use(authController.protect);
+
+// Add audit logging for all recharge transaction routes
+router.use(auditMiddleware.addStartTime);
+router.use(auditMiddleware.captureAudit);
 
 // @route   POST /api/recharge/mobile
 // @desc    Process mobile recharge

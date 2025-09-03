@@ -17,7 +17,7 @@ const Transactions = () => {
 
   const fetchTransactions = async () => {
     try {
-      const response = await axios.get('/api/wallet/my-transactions');
+      const response = await axios.get('/wallet/my-transactions');
       setTransactions(response.data.data.transactions);
     } catch (error) {
       console.error('Error fetching transactions:', error);

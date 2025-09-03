@@ -1,7 +1,8 @@
 const axios = require('axios');
 const ApiProvider = require('../models/ApiProvider');
 const OperatorConfig = require('../models/OperatorConfig');
-const RechargeTransaction = require('../models/RechargeTransaction');
+const Transaction = require('../models/Transaction');
+const Wallet = require('../models/Wallet');
 const AppError = require('../utils/appError');
 
 class RechargeService {
@@ -389,17 +390,49 @@ class RechargeService {
    * Create transaction record
    */
   async createTransaction(data) {
-    const transaction = new RechargeTransaction({
+    // Get user's wallet
+    const wallet = await Wallet.findOne({ userId: data.userId });
+    if (!wallet) {
+      throw new AppError('User wallet not found', 404);
+    }
+
+    const transactionId = this.generateTransactionId();
+    
+    const transaction = new Transaction({
+      wallet: wallet._id,
       userId: data.userId,
-      type: data.serviceType,
-      mobileNumber: data.mobileNumber,
-      customerNumber: data.customerNumber,
-      operator: data.operatorCode,
       amount: data.amount,
-      circle: data.circle,
+      type: data.serviceType === 'mobile' ? 'mobile-recharge' : 'dth-recharge',
       status: 'pending',
-      transactionId: this.generateTransactionId(),
-      processingMode: data.processingMode
+      description: `${data.serviceType.toUpperCase()} Recharge - ${data.operatorCode}`,
+      transactionId: transactionId,
+      reference: transactionId,
+      operator: data.operatorCode,
+      
+      // Recharge-specific data
+      rechargeData: {
+        mobileNumber: data.mobileNumber,
+        customerNumber: data.customerNumber,
+        circle: data.circle,
+        planId: data.planId,
+        planName: data.planName,
+        planDescription: data.planDescription,
+        validity: data.validity,
+        talktime: data.talktime,
+        data: data.data
+      },
+      
+      // Processing configuration
+      apiProvider: data.processingMode === 'api' ? 'api' : 'manual',
+      
+      // Metadata
+      metadata: {
+        processingMode: data.processingMode,
+        operatorConfig: data.operatorConfig?._id
+      },
+      
+      // Timing
+      initiatedAt: new Date()
     });
 
     return await transaction.save();
@@ -412,11 +445,22 @@ class RechargeService {
     transaction.status = result.pending ? 'pending' : 'success';
     transaction.apiTransactionId = result.apiTransactionId;
     transaction.apiResponse = result.rawResponse;
-    transaction.apiProvider = apiProvider._id;
+    transaction.apiProvider = apiProvider.name || apiProvider._id;
     
     if (!result.pending) {
       transaction.completedAt = new Date();
     }
+    
+    // Update status history
+    if (!transaction.statusHistory) {
+      transaction.statusHistory = [];
+    }
+    transaction.statusHistory.push({
+      status: transaction.status,
+      timestamp: new Date(),
+      reason: result.pending ? 'API processing pending' : 'Transaction completed successfully',
+      updatedBy: 'system'
+    });
     
     await transaction.save();
   }
@@ -461,8 +505,12 @@ class RechargeService {
    * Check transaction status
    */
   async checkTransactionStatus(transactionId) {
-    const transaction = await RechargeTransaction.findOne({ transactionId })
+    const transaction = await Transaction.findOne({ 
+      transactionId,
+      type: { $in: ['mobile-recharge', 'dth-recharge'] }
+    })
       .populate('userId', 'name email')
+      .populate('wallet', 'balance')
       .populate('apiProvider', 'name displayName');
 
     if (!transaction) {

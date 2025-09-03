@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-09-02T18:52:04.548Z",
+  "error": {
+    "message": "Request failed with status code 500",
+    "status": 500,
+    "statusText": "Internal Server Error",
+    "headers": {
+      "date": "Tue, 02 Sep 2025 18:52:04 GMT",
+      "content-type": "application/json",
+      "transfer-encoding": "chunked",
+      "connection": "keep-alive",
+      "server": "Apache",
+      "x-frame-options": "DENY",
+      "x-content-type-options": "nosniff",
+      "x-powered-by": "PAYSPRINT PVT LTD",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "expires": "Wed, 02 Sep 2026 18:52:04 GMT",
+      "cache-control": "post-check=0, pre-check=0",
+      "access-control-allow-origin": "https://sit.paysprint.in",
+      "referrer-policy": "no-referrer-when-downgrade",
+      "expect-ct": "enforce, max-age=30",
+      "x-permitted-cross-domain-policies": "none",
+      "access-control-allow-headers": "Content-Type,Token,Authkey,Authtoken,Accept",
+      "upgrade": "h2,h2c"
+    },
+    "data": "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\r\n    <title>404 Page Not Founds</title>\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"asset/css/_default/login.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\r\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\r\n</head>\r\n<body>\r\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\r\n    <div class=\"content_blk\">\r\n        <img src=\"asset/images/_default/404.png\">\r\n    </div>    \r\n</div>\r\n<!--<div class=\"login_screen\">\r\n    <div class=\"form_blk\">\r\n        <div class=\"support_blk\">\r\n            <h1>404 Page Not Found</h1>\r\n\t\t<p>The page you requested was not found.</p>        </div>\r\n\t\t<a href=\""
+  }
+}

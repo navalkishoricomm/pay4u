@@ -1,6 +1,5 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
-const RechargeTransaction = require('../models/RechargeTransaction');
 const OperatorConfig = require('../models/OperatorConfig');
 const rechargeService = require('../services/rechargeService');
 const catchAsync = require('../utils/catchAsync');
@@ -152,18 +151,23 @@ exports.getRechargeHistory = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
   const { page = 1, limit = 10, type } = req.query;
 
-  const query = { userId };
+  const query = { 
+    userId,
+    type: { $in: ['mobile-recharge', 'dth-recharge'] }
+  };
+  
   if (type && ['mobile', 'dth'].includes(type)) {
-    query.type = type;
+    query.type = type === 'mobile' ? 'mobile-recharge' : 'dth-recharge';
   }
 
-  const recharges = await RechargeTransaction.find(query)
+  const recharges = await Transaction.find(query)
     .sort({ createdAt: -1 })
     .limit(limit * 1)
     .skip((page - 1) * limit)
-    .select('-__v');
+    .select('-__v')
+    .populate('wallet', 'balance');
 
-  const total = await RechargeTransaction.countDocuments(query);
+  const total = await Transaction.countDocuments(query);
 
   res.status(200).json({
     status: 'success',
@@ -183,10 +187,11 @@ exports.getRechargeStatus = catchAsync(async (req, res, next) => {
   const { transactionId } = req.params;
   const userId = req.user.id;
 
-  const recharge = await RechargeTransaction.findOne({
+  const recharge = await Transaction.findOne({
     transactionId,
-    userId
-  }).select('-__v');
+    userId,
+    type: { $in: ['mobile-recharge', 'dth-recharge'] }
+  }).select('-__v').populate('wallet', 'balance');
 
   if (!recharge) {
     return next(new AppError('Recharge transaction not found', 404));

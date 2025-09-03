@@ -23,7 +23,7 @@ const VoucherOrderApprovals = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `/api/admin/voucher-orders?status=${statusFilter}&page=${currentPage}&limit=10`,
+        `/admin/voucher-orders?status=${statusFilter}&page=${currentPage}&limit=10`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -48,7 +48,7 @@ const VoucherOrderApprovals = () => {
   const handleViewOrder = async (orderId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/voucher-orders/${orderId}`, {
+      const response = await fetch(`/admin/voucher-orders/${orderId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -74,7 +74,7 @@ const VoucherOrderApprovals = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/voucher-orders/${orderId}/approve`, {
+      const response = await fetch(`/admin/voucher-orders/${orderId}/approve`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -103,7 +103,7 @@ const VoucherOrderApprovals = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/voucher-orders/${selectedOrder._id}/reject`, {
+      const response = await fetch(`/admin/voucher-orders/${selectedOrder._id}/reject`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ const VoucherOrderApprovals = () => {
       const formData = new FormData();
       formData.append('voucherFile', selectedFile);
 
-      const response = await fetch(`/api/admin/voucher-orders/${selectedOrder._id}/upload-file`, {
+      const response = await fetch(`/admin/voucher-orders/${selectedOrder._id}/upload-file`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -168,7 +168,7 @@ const VoucherOrderApprovals = () => {
   const handleDownloadFile = async (orderId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/voucher-orders/${orderId}/download-file`, {
+      const response = await fetch(`/admin/voucher-orders/${orderId}/download-file`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -253,7 +253,7 @@ const VoucherOrderApprovals = () => {
         </div>
       </div>
 
-      {orders.length === 0 ? (
+      {(orders || []).length === 0 ? (
         <div className="no-orders">
           <p>No voucher orders found for the selected status.</p>
         </div>
@@ -274,7 +274,7 @@ const VoucherOrderApprovals = () => {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order) => (
+                {(orders || []).map((order) => (
                   <tr key={order._id}>
                     <td className="order-number">{order.orderNumber}</td>
                     <td>{order.user?.name || 'N/A'}</td>

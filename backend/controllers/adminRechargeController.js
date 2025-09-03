@@ -1,6 +1,6 @@
 const ApiProvider = require('../models/ApiProvider');
 const OperatorConfig = require('../models/OperatorConfig');
-const RechargeTransaction = require('../models/RechargeTransaction');
+const Transaction = require('../models/Transaction');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -214,9 +214,10 @@ exports.deleteOperatorConfig = catchAsync(async (req, res, next) => {
   }
   
   // Check if there are pending transactions for this operator
-  const pendingTransactions = await RechargeTransaction.countDocuments({
-    operator: operatorConfig.operatorCode,
-    status: 'pending'
+  const pendingTransactions = await Transaction.countDocuments({
+    'rechargeData.operator': operatorConfig.operatorCode,
+    status: 'pending',
+    type: { $in: ['mobile-recharge', 'dth-recharge'] }
   });
   
   if (pendingTransactions > 0) {
@@ -288,10 +289,15 @@ exports.getRechargeStats = catchAsync(async (req, res, next) => {
     if (endDate) matchStage.createdAt.$lte = new Date(endDate);
   }
   
-  if (serviceType) matchStage.type = serviceType;
-  if (operatorCode) matchStage.operator = operatorCode;
+  // Add recharge type filter
+  matchStage.type = { $in: ['mobile-recharge', 'dth-recharge'] };
   
-  const stats = await RechargeTransaction.aggregate([
+  if (serviceType) {
+    matchStage.type = serviceType === 'mobile' ? 'mobile-recharge' : 'dth-recharge';
+  }
+  if (operatorCode) matchStage['rechargeData.operator'] = operatorCode;
+  
+  const stats = await Transaction.aggregate([
     { $match: matchStage },
     {
       $group: {
@@ -312,11 +318,11 @@ exports.getRechargeStats = catchAsync(async (req, res, next) => {
     }
   ]);
   
-  const operatorStats = await RechargeTransaction.aggregate([
+  const operatorStats = await Transaction.aggregate([
     { $match: matchStage },
     {
       $group: {
-        _id: '$operator',
+        _id: '$rechargeData.operator',
         count: { $sum: 1 },
         totalAmount: { $sum: '$amount' },
         successRate: {
@@ -361,18 +367,21 @@ exports.getApiProviderStats = catchAsync(async (req, res, next) => {
 exports.getPendingManualTransactions = catchAsync(async (req, res, next) => {
   const { page = 1, limit = 10 } = req.query;
   
-  const transactions = await RechargeTransaction.find({
+  const transactions = await Transaction.find({
     status: 'pending',
-    processingMode: 'manual'
+    processingMode: 'manual',
+    type: { $in: ['mobile-recharge', 'dth-recharge'] }
   })
     .populate('userId', 'name email phone')
+    .populate('wallet', 'balance')
     .sort({ createdAt: -1 })
     .limit(limit * 1)
     .skip((page - 1) * limit);
   
-  const total = await RechargeTransaction.countDocuments({
+  const total = await Transaction.countDocuments({
     status: 'pending',
-    processingMode: 'manual'
+    processingMode: 'manual',
+    type: { $in: ['mobile-recharge', 'dth-recharge'] }
   });
   
   res.status(200).json({
@@ -394,7 +403,7 @@ exports.approveManualTransaction = catchAsync(async (req, res, next) => {
     return next(new AppError('Invalid status. Must be success or failed', 400));
   }
   
-  const transaction = await RechargeTransaction.findById(transactionId);
+  const transaction = await Transaction.findById(transactionId);
   
   if (!transaction) {
     return next(new AppError('Transaction not found', 404));
@@ -449,11 +458,12 @@ exports.bulkApproveTransactions = catchAsync(async (req, res, next) => {
     updateData.refundDate = new Date();
   }
   
-  const result = await RechargeTransaction.updateMany(
+  const result = await Transaction.updateMany(
     {
       _id: { $in: transactionIds },
       status: 'pending',
-      processingMode: 'manual'
+      processingMode: 'manual',
+      type: { $in: ['mobile-recharge', 'dth-recharge'] }
     },
     updateData
   );

@@ -1,6 +1,9 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
+// Set axios base URL
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
@@ -30,7 +33,7 @@ export const AuthProvider = ({ children }) => {
   const fetchUserData = async () => {
     try {
       // This would be a protected route that returns user data
-      const response = await axios.get('/api/auth/me');
+      const response = await axios.get('/auth/me');
       const userData = response.data.data.user;
       
       setCurrentUser(userData);
@@ -48,7 +51,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setError(null);
-      const response = await axios.post('/api/auth/signup', userData);
+      const response = await axios.post('/auth/signup', userData);
       const { token, data } = response.data;
       
       // Save token to localStorage
@@ -72,7 +75,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setError(null);
-      const response = await axios.post('/api/auth/login', { email, password });
+      const response = await axios.post('/auth/login', { email, password });
       const { token, data } = response.data;
       
       // Save token to localStorage

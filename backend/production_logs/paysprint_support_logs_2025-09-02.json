@@ -1,0 +1,180 @@
+{
+  "date": "2025-09-02",
+  "requests": [
+    {
+      "requestId": "REQ_1756839416518_9icepr8kc",
+      "timestamp": "2025-09-02T18:56:56.518Z",
+      "type": "REQUEST",
+      "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/dmt/banklist",
+      "method": "GET",
+      "headers": {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-Partner-Id": "PS003214",
+        "X-API-Version": "v1",
+        "PARTNERID": "PS0012468",
+        "AES_KEY": "060e37d1XXXXXXXX",
+        "AES_IV": "788a4b95XXXXXXXX",
+        "Authorization": "Bearer eyJhbGciOiJIU..."
+      },
+      "body": {},
+      "additionalInfo": {
+        "endpoint": "/dmt/banklist",
+        "originalData": {},
+        "encrypted": false,
+        "retryCount": 0,
+        "apiProvider": "paysprint"
+      }
+    },
+    {
+      "requestId": "REQ_1756839417082_qebpon9gb",
+      "timestamp": "2025-09-02T18:56:57.082Z",
+      "type": "REQUEST",
+      "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/balance",
+      "method": "GET",
+      "headers": {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-Partner-Id": "PS003214",
+        "X-API-Version": "v1",
+        "PARTNERID": "PS0012468",
+        "AES_KEY": "060e37d1XXXXXXXX",
+        "AES_IV": "788a4b95XXXXXXXX",
+        "Authorization": "Bearer eyJhbGciOiJIU..."
+      },
+      "body": {},
+      "additionalInfo": {
+        "endpoint": "/balance",
+        "originalData": {},
+        "encrypted": false,
+        "retryCount": 0,
+        "apiProvider": "paysprint"
+      }
+    },
+    {
+      "requestId": "REQ_1756839417201_y0quknocu",
+      "timestamp": "2025-09-02T18:56:57.201Z",
+      "type": "REQUEST",
+      "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/dmt/remitter/queryremitter",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-Partner-Id": "PS003214",
+        "X-API-Version": "v1",
+        "PARTNERID": "PS0012468",
+        "AES_KEY": "060e37d1XXXXXXXX",
+        "AES_IV": "788a4b95XXXXXXXX",
+        "Authorization": "Bearer eyJhbGciOiJIU..."
+      },
+      "body": {
+        "mobile": "9999999999"
+      },
+      "additionalInfo": {
+        "endpoint": "/dmt/remitter/queryremitter",
+        "originalData": {
+          "mobile": "9999999999"
+        },
+        "encrypted": true,
+        "retryCount": 0,
+        "apiProvider": "paysprint"
+      }
+    }
+  ],
+  "responses": [
+    {
+      "requestId": "REQ_1756839416518_9icepr8kc",
+      "timestamp": "2025-09-02T18:56:57.008Z",
+      "type": "RESPONSE",
+      "status": 500,
+      "statusText": "Internal Server Error",
+      "headers": {
+        "date": "Tue, 02 Sep 2025 18:56:57 GMT",
+        "content-type": "application/json",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "server": "Apache",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "x-powered-by": "PAYSPRINT PVT LTD",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "expires": "Wed, 02 Sep 2026 18:56:57 GMT",
+        "cache-control": "post-check=0, pre-check=0",
+        "access-control-allow-origin": "https://sit.paysprint.in",
+        "referrer-policy": "no-referrer-when-downgrade",
+        "expect-ct": "enforce, max-age=30",
+        "x-permitted-cross-domain-policies": "none",
+        "access-control-allow-headers": "Content-Type,Token,Authkey,Authtoken,Accept",
+        "upgrade": "h2,h2c"
+      },
+      "data": "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\r\n    <title>404 Page Not Founds</title>\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"asset/css/_default/login.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\r\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\r\n</head>\r\n<body>\r\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\r\n    <div class=\"content_blk\">\r\n        <img src=\"asset/images/_default/404.png\">\r\n    </div>    \r\n</div>\r\n<!--<div class=\"login_screen\">\r\n    <div class=\"form_blk\">\r\n        <div class=\"support_blk\">\r\n            <h1>404 Page Not Found</h1>\r\n\t\t<p>The page you requested was not found.</p>        </div>\r\n\t\t<a href=\"",
+      "error": {
+        "message": "Request failed with status code 500",
+        "stack": "AxiosError: Request failed with status code 500\n    at settle (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\node_modules\\axios\\dist\\node\\axios.cjs:2090:12)\n    at IncomingMessage.handleStreamEnd (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\node_modules\\axios\\dist\\node\\axios.cjs:3207:11)\n    at IncomingMessage.emit (node:events:530:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\node_modules\\axios\\dist\\node\\axios.cjs:4317:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async DmtService.makeApiRequest (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\services\\dmtService.js:156:24)\n    at async testBankListWithLogging (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\testBankListWithLogging.js:27:30)"
+      }
+    },
+    {
+      "requestId": "REQ_1756839417082_qebpon9gb",
+      "timestamp": "2025-09-02T18:56:57.158Z",
+      "type": "RESPONSE",
+      "status": 500,
+      "statusText": "Internal Server Error",
+      "headers": {
+        "date": "Tue, 02 Sep 2025 18:56:57 GMT",
+        "content-type": "application/json",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "server": "Apache",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "x-powered-by": "PAYSPRINT PVT LTD",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "expires": "Wed, 02 Sep 2026 18:56:57 GMT",
+        "cache-control": "post-check=0, pre-check=0",
+        "access-control-allow-origin": "https://sit.paysprint.in",
+        "referrer-policy": "no-referrer-when-downgrade",
+        "expect-ct": "enforce, max-age=30",
+        "x-permitted-cross-domain-policies": "none",
+        "access-control-allow-headers": "Content-Type,Token,Authkey,Authtoken,Accept",
+        "upgrade": "h2,h2c"
+      },
+      "data": "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\r\n    <title>404 Page Not Founds</title>\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"asset/css/_default/login.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\">\r\n    <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>\r\n</head>\r\n<body>\r\n<div class=\"welcome_screen\" style=\"padding:0 0 0 30%;width:100%;background:#151922;background-size:cover;height:100%\">\r\n    <div class=\"content_blk\">\r\n        <img src=\"asset/images/_default/404.png\">\r\n    </div>    \r\n</div>\r\n<!--<div class=\"login_screen\">\r\n    <div class=\"form_blk\">\r\n        <div class=\"support_blk\">\r\n            <h1>404 Page Not Found</h1>\r\n\t\t<p>The page you requested was not found.</p>        </div>\r\n\t\t<a href=\"",
+      "error": {
+        "message": "Request failed with status code 500",
+        "stack": "AxiosError: Request failed with status code 500\n    at settle (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\node_modules\\axios\\dist\\node\\axios.cjs:2090:12)\n    at IncomingMessage.handleStreamEnd (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\node_modules\\axios\\dist\\node\\axios.cjs:3207:11)\n    at IncomingMessage.emit (node:events:530:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\node_modules\\axios\\dist\\node\\axios.cjs:4317:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async DmtService.makeApiRequest (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\services\\dmtService.js:156:24)\n    at async testBankListWithLogging (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\testBankListWithLogging.js:90:34)"
+      }
+    },
+    {
+      "requestId": "REQ_1756839417201_y0quknocu",
+      "timestamp": "2025-09-02T18:57:12.234Z",
+      "type": "RESPONSE",
+      "status": 500,
+      "statusText": "Internal Server Error",
+      "headers": {
+        "date": "Tue, 02 Sep 2025 18:57:12 GMT",
+        "content-type": "application/json",
+        "content-length": "0",
+        "connection": "keep-alive",
+        "server": "Apache",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "x-powered-by": "PAYSPRINT PVT LTD",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "expires": "Wed, 02 Sep 2026 18:56:57 GMT",
+        "cache-control": "post-check=0, pre-check=0",
+        "access-control-allow-origin": "https://sit.paysprint.in",
+        "referrer-policy": "no-referrer-when-downgrade",
+        "expect-ct": "enforce, max-age=30",
+        "x-permitted-cross-domain-policies": "none",
+        "access-control-allow-headers": "Content-Type,Token,Authkey,Authtoken,Accept",
+        "upgrade": "h2,h2c"
+      },
+      "data": null,
+      "error": {
+        "message": "Request failed with status code 500",
+        "stack": "AxiosError: Request failed with status code 500\n    at settle (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\node_modules\\axios\\dist\\node\\axios.cjs:2090:12)\n    at IncomingMessage.handleStreamEnd (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\node_modules\\axios\\dist\\node\\axios.cjs:3207:11)\n    at IncomingMessage.emit (node:events:530:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\node_modules\\axios\\dist\\node\\axios.cjs:4317:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async DmtService.makeApiRequest (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\services\\dmtService.js:156:24)\n    at async testBankListWithLogging (C:\\Users\\nkcpl2\\Documents\\traePay4U\\backend\\testBankListWithLogging.js:90:34)"
+      }
+    }
+  ],
+  "transactions": []
+}

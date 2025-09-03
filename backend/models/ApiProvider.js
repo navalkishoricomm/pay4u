@@ -47,20 +47,55 @@ const apiProviderSchema = new mongoose.Schema({
   endpoints: {
     mobileRecharge: {
       type: String,
-      required: [true, 'Mobile recharge endpoint is required'],
+      required: function() {
+        return this.supportedServices && this.supportedServices.includes('mobile');
+      },
       trim: true
     },
     dthRecharge: {
       type: String,
-      required: [true, 'DTH recharge endpoint is required'],
+      required: function() {
+        return this.supportedServices && this.supportedServices.includes('dth');
+      },
       trim: true
     },
     checkStatus: {
       type: String,
-      required: [true, 'Status check endpoint is required'],
+      required: function() {
+        return this.supportedServices && (this.supportedServices.includes('mobile') || this.supportedServices.includes('dth'));
+      },
       trim: true
     },
     getOperators: {
+      type: String,
+      trim: true
+    },
+    // DMT endpoints
+    dmtRemitterRegistration: {
+      type: String,
+      trim: true
+    },
+    dmtRemitterKyc: {
+      type: String,
+      trim: true
+    },
+    dmtBeneficiaryRegistration: {
+      type: String,
+      trim: true
+    },
+    dmtBeneficiaryVerification: {
+      type: String,
+      trim: true
+    },
+    dmtTransaction: {
+      type: String,
+      trim: true
+    },
+    dmtTransactionStatus: {
+      type: String,
+      trim: true
+    },
+    dmtRefund: {
       type: String,
       trim: true
     }
@@ -125,7 +160,7 @@ const apiProviderSchema = new mongoose.Schema({
   },
   supportedServices: {
     type: [String],
-    enum: ['mobile', 'dth', 'electricity', 'gas', 'water', 'broadband'],
+    enum: ['mobile', 'dth', 'electricity', 'gas', 'water', 'broadband', 'dmt'],
     default: ['mobile', 'dth']
   },
   testMode: {

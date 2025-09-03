@@ -17,6 +17,8 @@ router.get('/dashboard-stats', adminController.getDashboardStats);
 router.get('/transactions', adminController.getAllTransactions);
 router.get('/transactions/pending', adminController.getPendingTransactions);
 router.patch('/transactions/:id', adminController.updateTransactionStatus);
+router.patch('/transactions/bulk-approve', adminController.bulkApproveTransactions);
+router.patch('/transactions/bulk-reject', adminController.bulkRejectTransactions);
 
 // User management routes
 router.get('/users', adminController.getAllUsers);

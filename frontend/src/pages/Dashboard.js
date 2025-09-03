@@ -14,7 +14,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
-        const response = await axios.get('/api/wallet/my-wallet');
+        const response = await axios.get('/wallet/my-wallet');
         setWalletData(response.data.data.wallet);
       } catch (error) {
         console.error('Error fetching wallet data:', error);
@@ -226,6 +226,114 @@ const Dashboard = () => {
                  fontWeight: '400'
                }}>
                 Payment
+              </span>
+            </div>
+          </Link>
+
+          <Link 
+            to="/money-transfer" 
+            style={{
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              textDecoration: 'none',
+              cursor: 'pointer', 
+              transition: 'all 0.2s ease',
+              padding: '0.5rem'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            <div style={{
+               width: '48px', 
+               height: '48px', 
+               borderRadius: '50%', 
+               background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', 
+               display: 'flex', 
+               alignItems: 'center', 
+               justifyContent: 'center',
+               marginBottom: '0.375rem',
+               border: '1.5px solid var(--primary-color)',
+               boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+               fontSize: '1.25rem'
+             }}>
+              💸
+            </div>
+            <div style={{textAlign: 'center'}}>
+              <h4 style={{
+                 margin: 0, 
+                 fontSize: '0.625rem', 
+                 fontWeight: '600', 
+                 color: 'var(--text-primary)', 
+                 marginBottom: '0.0625rem',
+                 lineHeight: '1.1'
+               }}>
+                 Money
+               </h4>
+               <span style={{
+                 fontSize: '0.5rem', 
+                 color: 'var(--text-secondary)', 
+                 fontWeight: '400'
+               }}>
+                Transfer
+              </span>
+            </div>
+          </Link>
+
+          <Link 
+            to="/aeps" 
+            style={{
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              textDecoration: 'none',
+              cursor: 'pointer', 
+              transition: 'all 0.2s ease',
+              padding: '0.5rem'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            <div style={{
+               width: '48px', 
+               height: '48px', 
+               borderRadius: '50%', 
+               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+               display: 'flex', 
+               alignItems: 'center', 
+               justifyContent: 'center',
+               marginBottom: '0.375rem',
+               border: '1.5px solid var(--primary-color)',
+               boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+               fontSize: '1.25rem'
+             }}>
+              🏧
+            </div>
+            <div style={{textAlign: 'center'}}>
+              <h4 style={{
+                 margin: 0, 
+                 fontSize: '0.625rem', 
+                 fontWeight: '600', 
+                 color: 'var(--text-primary)', 
+                 marginBottom: '0.0625rem',
+                 lineHeight: '1.1'
+               }}>
+                 AEPS
+               </h4>
+               <span style={{
+                 fontSize: '0.5rem', 
+                 color: 'var(--text-secondary)', 
+                 fontWeight: '400'
+               }}>
+                Banking
               </span>
             </div>
           </Link>

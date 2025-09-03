@@ -66,6 +66,16 @@ const AdminNavbar = () => {
             <i className="fas fa-clipboard-check"></i> Voucher Approvals
           </Link>
         </li>
+        <li className={isActive('/admin/charge-slabs')}>
+          <Link to="/admin/charge-slabs">
+            <i className="fas fa-calculator"></i> Charge Slabs
+          </Link>
+        </li>
+        <li className={isActive('/admin/audit')}>
+          <Link to="/admin/audit">
+            <i className="fas fa-shield-alt"></i> Transaction Audit
+          </Link>
+        </li>
         <li>
           <Link to="/dashboard">
             <i className="fas fa-user"></i> User Dashboard

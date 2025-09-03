@@ -55,19 +55,23 @@ exports.topUpWallet = async (req, res) => {
       });
     }
     
+    // Generate unique transaction ID
+    const transactionId = `TOPUP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     // Create a transaction record (awaiting approval for top-ups)
     const transaction = await Transaction.create({
-      user: req.user.id,
+      transactionId: transactionId,
+      userId: req.user.id,
       wallet: wallet._id,
       amount: parseFloat(amount),
       type: 'topup',
       status: 'awaiting_approval',
-      description: 'Wallet top-up',
+      description: req.body.description || 'Wallet top-up',
       metadata: {
         paymentMethod: paymentMethod || 'card',
         // In a real implementation, this would include payment gateway details
       },
-      reference: `TOPUP-${Date.now()}`, // In real scenario, this would be the payment gateway reference
+      reference: transactionId,
     });
 
     console.log(`Top-up of ${amount} submitted for approval`);

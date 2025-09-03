@@ -21,8 +21,8 @@ const TransactionStatusUpdates = () => {
 
   const fetchRecentStatusUpdates = async () => {
     try {
-      const response = await axios.get('/api/transactions/status-updates');
-      const updates = response.data.data.updates;
+      const response = await axios.get('/transactions/status-updates');
+      const updates = response.data.data.statusUpdates;
       
       // Check if there are new updates compared to what we already have
       const newUpdates = updates.filter(update => {

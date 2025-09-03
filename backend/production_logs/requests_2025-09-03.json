@@ -1,0 +1,154 @@
+[
+  {
+    "requestId": "REQ_1756881333904_i820s1ghu",
+    "timestamp": "2025-09-03T06:35:33.904Z",
+    "type": "REQUEST",
+    "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/dmt/kyc/transact/transact",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "X-Partner-Id": "PS003214",
+      "X-API-Version": "v1",
+      "PARTNERID": "PS0012468",
+      "AES_KEY": "060e37d1XXXXXXXX",
+      "AES_IV": "788a4b95XXXXXXXX",
+      "Authorization": "Bearer eyJhbGciOiJIU..."
+    },
+    "body": {
+      "mobile": "9810610554",
+      "beneid": "MOCK_BENE_1756728704235",
+      "amount": 100,
+      "txnid": "1756881333826mo2lhds",
+      "mode": "imps"
+    },
+    "additionalInfo": {
+      "endpoint": "/dmt/kyc/transact/transact",
+      "originalData": {
+        "mobile": "9810610554",
+        "beneid": "MOCK_BENE_1756728704235",
+        "amount": 100,
+        "txnid": "1756881333826mo2lhds",
+        "mode": "imps"
+      },
+      "encrypted": true,
+      "retryCount": 0,
+      "apiProvider": "paysprint"
+    }
+  },
+  {
+    "requestId": "REQ_1756882063030_an9jfgx3c",
+    "timestamp": "2025-09-03T06:47:43.030Z",
+    "type": "REQUEST",
+    "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/dmt/kyc/transact/transact",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "X-Partner-Id": "PS003214",
+      "X-API-Version": "v1",
+      "PARTNERID": "PS0012468",
+      "AES_KEY": "060e37d1XXXXXXXX",
+      "AES_IV": "788a4b95XXXXXXXX",
+      "Authorization": "Bearer eyJhbGciOiJIU..."
+    },
+    "body": {
+      "mobile": "9810610554",
+      "beneid": "MOCK_BENE_1756728704235",
+      "amount": 100,
+      "txnid": "1756882062882lttkd9u",
+      "mode": "imps"
+    },
+    "additionalInfo": {
+      "endpoint": "/dmt/kyc/transact/transact",
+      "originalData": {
+        "mobile": "9810610554",
+        "beneid": "MOCK_BENE_1756728704235",
+        "amount": 100,
+        "txnid": "1756882062882lttkd9u",
+        "mode": "imps"
+      },
+      "encrypted": true,
+      "retryCount": 0,
+      "apiProvider": "paysprint"
+    }
+  },
+  {
+    "requestId": "REQ_1756884465061_un2z1ipeu",
+    "timestamp": "2025-09-03T07:27:45.060Z",
+    "type": "REQUEST",
+    "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/dmt/remitter/kyc",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "User-Agent": "TraePay4U/1.0",
+      "X-Partner-Id": "PS003214",
+      "X-API-Version": "v1",
+      "PARTNERID": "PS0012468",
+      "AES_KEY": "060e37d1XXXXXXXX",
+      "AES_IV": "788a4b95XXXXXXXX",
+      "Authorization": "Bearer eyJhbGciOiJIU...",
+      "Authorised-Key": "132d8577910bcd5afee8f26c0b239263"
+    },
+    "body": {
+      "mobile": "9810610554",
+      "is_iris": 2,
+      "wadh": "additional_auth_data",
+      "piddata": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<PidData>\n  <Resp errCode=\"0\" errInfo=\"Success\" fCount=\"1\" fType=\"0\" nmPoints=\"36\" qScore=\"75\" />\n  <DeviceInfo dpId=\"MANTRA.MSIPL\" rdsId=\"MANTRA.WIN.001\" rdsVer=\"1.0.5\" mi=\"MFS100\" mc=\"MIIEGjCCAwKgAwIBAgIGAWd\" />\n  <Skey ci=\"20200615\">encrypted_session_key_data</Skey>\n  <Hmac>hmac_value</Hmac>\n  <Data type=\"X\">biometric_template_data_fingerprint_1756884464994</Data>\n</PidData>",
+      "kycType": "fingerprint"
+    },
+    "additionalInfo": {
+      "endpoint": "/dmt/remitter/kyc",
+      "originalData": {
+        "mobile": "9810610554",
+        "is_iris": 2,
+        "wadh": "additional_auth_data",
+        "piddata": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<PidData>\n  <Resp errCode=\"0\" errInfo=\"Success\" fCount=\"1\" fType=\"0\" nmPoints=\"36\" qScore=\"75\" />\n  <DeviceInfo dpId=\"MANTRA.MSIPL\" rdsId=\"MANTRA.WIN.001\" rdsVer=\"1.0.5\" mi=\"MFS100\" mc=\"MIIEGjCCAwKgAwIBAgIGAWd\" />\n  <Skey ci=\"20200615\">encrypted_session_key_data</Skey>\n  <Hmac>hmac_value</Hmac>\n  <Data type=\"X\">biometric_template_data_fingerprint_1756884464994</Data>\n</PidData>",
+        "kycType": "fingerprint"
+      },
+      "encrypted": true,
+      "retryCount": 0,
+      "apiProvider": "paysprint"
+    }
+  },
+  {
+    "requestId": "REQ_1756884482378_ch1a5xjmh",
+    "timestamp": "2025-09-03T07:28:02.378Z",
+    "type": "REQUEST",
+    "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/dmt/remitter/kyc",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "User-Agent": "TraePay4U/1.0",
+      "X-Partner-Id": "PS003214",
+      "X-API-Version": "v1",
+      "PARTNERID": "PS0012468",
+      "AES_KEY": "060e37d1XXXXXXXX",
+      "AES_IV": "788a4b95XXXXXXXX",
+      "Authorization": "Bearer eyJhbGciOiJIU...",
+      "Authorised-Key": "132d8577910bcd5afee8f26c0b239263"
+    },
+    "body": {
+      "mobile": "9810610554",
+      "is_iris": 4,
+      "wadh": "additional_auth_data",
+      "piddata": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<PidData>\n  <Resp errCode=\"0\" errInfo=\"Success\" fCount=\"1\" fType=\"0\" nmPoints=\"36\" qScore=\"75\" />\n  <DeviceInfo dpId=\"MANTRA.MSIPL\" rdsId=\"MANTRA.WIN.001\" rdsVer=\"1.0.5\" mi=\"MFS100\" mc=\"MIIEGjCCAwKgAwIBAgIGAWd\" />\n  <Skey ci=\"20200615\">encrypted_session_key_data</Skey>\n  <Hmac>hmac_value</Hmac>\n  <Data type=\"X\">biometric_template_data_face_auth_1756884482303</Data>\n</PidData>",
+      "kycType": "face_auth"
+    },
+    "additionalInfo": {
+      "endpoint": "/dmt/remitter/kyc",
+      "originalData": {
+        "mobile": "9810610554",
+        "is_iris": 4,
+        "wadh": "additional_auth_data",
+        "piddata": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<PidData>\n  <Resp errCode=\"0\" errInfo=\"Success\" fCount=\"1\" fType=\"0\" nmPoints=\"36\" qScore=\"75\" />\n  <DeviceInfo dpId=\"MANTRA.MSIPL\" rdsId=\"MANTRA.WIN.001\" rdsVer=\"1.0.5\" mi=\"MFS100\" mc=\"MIIEGjCCAwKgAwIBAgIGAWd\" />\n  <Skey ci=\"20200615\">encrypted_session_key_data</Skey>\n  <Hmac>hmac_value</Hmac>\n  <Data type=\"X\">biometric_template_data_face_auth_1756884482303</Data>\n</PidData>",
+        "kycType": "face_auth"
+      },
+      "encrypted": true,
+      "retryCount": 0,
+      "apiProvider": "paysprint"
+    }
+  }
+]
