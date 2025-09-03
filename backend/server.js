@@ -67,6 +67,16 @@ app.get('/', (req, res) => {
   res.send('Pay4U API is running');
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Pay4U API is healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Global flag to track database type
 global.useInMemoryDB = false;
 
