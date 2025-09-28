@@ -1,6 +1,7 @@
 const ApiProvider = require('../models/ApiProvider');
 const OperatorConfig = require('../models/OperatorConfig');
 const Transaction = require('../models/Transaction');
+const Wallet = require('../models/Wallet');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -419,7 +420,14 @@ exports.approveManualTransaction = catchAsync(async (req, res, next) => {
   transaction.processedBy = req.user.id;
   
   if (status === 'failed' && transaction.amount > 0) {
-    // Refund logic would go here
+    // Process refund to user's wallet
+    const wallet = await Wallet.findById(transaction.wallet);
+    if (wallet) {
+      wallet.balance += transaction.amount;
+      await wallet.save();
+      console.log(`Refund processed: +${transaction.amount} for failed recharge transaction ${transactionId}`);
+    }
+    
     transaction.refundAmount = transaction.amount;
     transaction.refundStatus = 'completed';
     transaction.refundDate = new Date();
@@ -456,6 +464,25 @@ exports.bulkApproveTransactions = catchAsync(async (req, res, next) => {
   if (status === 'failed') {
     updateData.refundStatus = 'completed';
     updateData.refundDate = new Date();
+    
+    // Process wallet refunds for failed transactions
+    const transactions = await Transaction.find({
+      _id: { $in: transactionIds },
+      status: 'pending',
+      processingMode: 'manual',
+      type: { $in: ['mobile-recharge', 'dth-recharge'] }
+    }).populate('wallet');
+    
+    for (const transaction of transactions) {
+      if (transaction.wallet && transaction.amount > 0) {
+        const wallet = await Wallet.findById(transaction.wallet._id);
+        if (wallet) {
+          wallet.balance += transaction.amount;
+          await wallet.save();
+          console.log(`Bulk refund processed: +${transaction.amount} for failed transaction ${transaction._id}`);
+        }
+      }
+    }
   }
   
   const result = await Transaction.updateMany(

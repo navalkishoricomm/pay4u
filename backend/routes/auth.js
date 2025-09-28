@@ -12,4 +12,8 @@ router.patch('/reset-password/:token', authController.resetPassword);
 router.use(authController.protect);
 router.get('/me', authController.getMe);
 
+// Admin only routes
+router.post('/admin/reset-password', authController.restrictTo('admin'), authController.adminResetPassword);
+router.get('/admin/users', authController.restrictTo('admin'), authController.getAllUsers);
+
 module.exports = router;

@@ -2,7 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
 // Set axios base URL
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+console.log('AuthContext - API Base URL:', axios.defaults.baseURL);
 
 const AuthContext = createContext();
 
@@ -75,6 +76,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setError(null);
+      console.log('Login attempt - Base URL:', axios.defaults.baseURL);
+      console.log('Login attempt - Full URL:', axios.defaults.baseURL + '/auth/login');
       const response = await axios.post('/auth/login', { email, password });
       const { token, data } = response.data;
       

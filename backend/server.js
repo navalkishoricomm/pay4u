@@ -13,14 +13,14 @@ const walletRoutes = require('./routes/wallet');
 const transactionRoutes = require('./routes/transaction');
 const adminRoutes = require('./routes/adminRoutes');
 const notificationRoutes = require('./routes/notifications');
-const commissionRoutes = require('./routes/commissionRoutes');
-const commissionSchemeRoutes = require('./routes/commissionSchemeRoutes');
+// const commissionRoutes = require('./routes/commissionRoutes');
+// const commissionSchemeRoutes = require('./routes/commissionSchemeRoutes');
 const voucherRoutes = require('./routes/voucherRoutes');
 const rechargeRoutes = require('./routes/recharge');
 const adminRechargeRoutes = require('./routes/adminRecharge');
 const dmtRoutes = require('./routes/dmt');
 const aepsRoutes = require('./routes/aepsRoutes');
-const chargeSlabRoutes = require('./routes/chargeSlabRoutes');
+// const chargeSlabRoutes = require('./routes/chargeSlabRoutes');
 const auditRoutes = require('./routes/auditRoutes');
 const auditMiddleware = require('./middleware/auditMiddleware');
 
@@ -51,15 +51,15 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/commissions', commissionRoutes);
-app.use('/api/commission-schemes', commissionSchemeRoutes);
+// app.use('/api/commissions', commissionRoutes);
+// app.use('/api/commission-schemes', commissionSchemeRoutes);
 app.use('/api/vouchers', voucherRoutes);
 app.use('/api/recharge', rechargeRoutes);
 app.use('/api/admin/recharge', adminRechargeRoutes);
 app.use('/api/dmt', dmtRoutes);
 app.use('/api/aeps', aepsRoutes);
 app.use('/api/admin/dmt', require('./routes/adminDMT'));
-app.use('/api/admin/charge-slabs', chargeSlabRoutes);
+// app.use('/api/admin/charge-slabs', chargeSlabRoutes);
 app.use('/api/admin/audit', auditRoutes);
 
 // Default route
@@ -131,7 +131,7 @@ io.on('connection', (socket) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log('Socket.IO server initialized');

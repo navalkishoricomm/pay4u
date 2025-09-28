@@ -84,6 +84,15 @@ const transactionSchema = new mongoose.Schema(
       default: 'pending',
       index: true
     },
+    previousStatus: {
+      type: String,
+      enum: [
+        'pending', 'processing', 'success', 'completed', 'failed', 
+        'cancelled', 'awaiting_approval', 'approved', 'rejected', 
+        'hold', 'refunded', 'timeout', null
+      ],
+      default: null
+    },
     
     // Approval workflow
     approvedBy: {
@@ -99,6 +108,22 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+    },
+    
+    // Manual processing fields
+    processingMode: {
+      type: String,
+      enum: ['api', 'manual', 'disabled'],
+      sparse: true
+    },
+    pendingReason: {
+      type: String,
+      trim: true,
+      sparse: true
+    },
+    approvalTimeout: {
+      type: Date,
+      sparse: true
     },
     
     // Transaction details

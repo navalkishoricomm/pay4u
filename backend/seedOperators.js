@@ -34,11 +34,17 @@ const seedOperators = async () => {
         minAmount: 10,
         maxAmount: 1000,
         commission: 2.5,
+        manualProcessing: {
+          requiresApproval: true,
+          approvalTimeout: 24,
+          autoApproveAmount: 0, // No auto-approval - all amounts require manual approval
+          instructions: 'All recharge transactions require manual admin approval'
+        },
         circles: [
-          { name: 'DELHI', isActive: true },
-          { name: 'MUMBAI', isActive: true },
-          { name: 'KOLKATA', isActive: true },
-          { name: 'CHENNAI', isActive: true }
+          { code: 'DELHI', name: 'DELHI', isActive: true },
+          { code: 'MUMBAI', name: 'MUMBAI', isActive: true },
+          { code: 'KOLKATA', name: 'KOLKATA', isActive: true },
+          { code: 'CHENNAI', name: 'CHENNAI', isActive: true }
         ],
         allowedAmounts: [10, 20, 50, 100, 200, 500, 1000],
         maintenanceMode: {
@@ -60,11 +66,17 @@ const seedOperators = async () => {
         minAmount: 10,
         maxAmount: 1000,
         commission: 2.0,
+        manualProcessing: {
+          requiresApproval: true,
+          approvalTimeout: 24,
+          autoApproveAmount: 0, // No auto-approval - all amounts require manual approval
+          instructions: 'All recharge transactions require manual admin approval'
+        },
         circles: [
-          { name: 'DELHI', isActive: true },
-          { name: 'MUMBAI', isActive: true },
-          { name: 'KOLKATA', isActive: true },
-          { name: 'CHENNAI', isActive: true }
+          { code: 'DELHI', name: 'DELHI', isActive: true },
+          { code: 'MUMBAI', name: 'MUMBAI', isActive: true },
+          { code: 'KOLKATA', name: 'KOLKATA', isActive: true },
+          { code: 'CHENNAI', name: 'CHENNAI', isActive: true }
         ],
         allowedAmounts: [10, 20, 50, 100, 200, 500, 1000],
         maintenanceMode: {
@@ -86,11 +98,17 @@ const seedOperators = async () => {
         minAmount: 10,
         maxAmount: 1000,
         commission: 2.2,
+        manualProcessing: {
+          requiresApproval: true,
+          approvalTimeout: 24,
+          autoApproveAmount: 0, // No auto-approval - all amounts require manual approval
+          instructions: 'All recharge transactions require manual admin approval'
+        },
         circles: [
-          { name: 'DELHI', isActive: true },
-          { name: 'MUMBAI', isActive: true },
-          { name: 'KOLKATA', isActive: true },
-          { name: 'CHENNAI', isActive: true }
+          { code: 'DELHI', name: 'DELHI', isActive: true },
+          { code: 'MUMBAI', name: 'MUMBAI', isActive: true },
+          { code: 'KOLKATA', name: 'KOLKATA', isActive: true },
+          { code: 'CHENNAI', name: 'CHENNAI', isActive: true }
         ],
         allowedAmounts: [10, 20, 50, 100, 200, 500, 1000],
         maintenanceMode: {

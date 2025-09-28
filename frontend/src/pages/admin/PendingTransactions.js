@@ -150,7 +150,7 @@ const PendingTransactions = () => {
           {transactions.map(transaction => (
             <div key={transaction._id} className="transaction-card">
               <div className="transaction-header">
-                <h3>Transaction #{transaction._id.substring(0, 8)}</h3>
+                <h3>Transaction #{transaction._id ? transaction._id.substring(0, 8) : 'N/A'}</h3>
                 <span className="transaction-date">
                   {new Date(transaction.createdAt).toLocaleString()}
                 </span>
@@ -184,9 +184,9 @@ const PendingTransactions = () => {
                 <div className="detail-row">
                   <span className="detail-label">Payment Method:</span>
                   <span className="detail-value">
-                    {transaction.metadata.paymentMethod}
-                    {transaction.metadata.cardLast4 && ` (**** **** **** ${transaction.metadata.cardLast4})`}
-                    {transaction.metadata.bankReference && ` (Ref: ${transaction.metadata.bankReference})`}
+                    {transaction.metadata?.paymentMethod || 'N/A'}
+                    {transaction.metadata?.cardLast4 && ` (**** **** **** ${transaction.metadata.cardLast4})`}
+                    {transaction.metadata?.bankReference && ` (Ref: ${transaction.metadata.bankReference})`}
                   </span>
                 </div>
                 <div className="detail-row">

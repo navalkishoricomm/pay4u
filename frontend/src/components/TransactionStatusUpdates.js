@@ -39,7 +39,7 @@ const TransactionStatusUpdates = () => {
             'failed': 'failed ✗'
           }[update.status] || update.status;
           
-          info(`Transaction ${update.transactionId.substring(0, 8)} has been ${statusText}`);
+          info(`Transaction ${update.transactionId ? update.transactionId.substring(0, 8) : 'N/A'} has been ${statusText}`);
         });
       }
       
@@ -65,7 +65,7 @@ const TransactionStatusUpdates = () => {
             className={`update-item status-${update.status}`}
           >
             <div className="update-header">
-              <span className="transaction-id">#{update.transactionId.substring(0, 8)}</span>
+              <span className="transaction-id">#{update.transactionId ? update.transactionId.substring(0, 8) : 'N/A'}</span>
               <span className={`status-badge ${update.status}`}>{update.status}</span>
             </div>
             <div className="update-details">

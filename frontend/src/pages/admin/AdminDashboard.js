@@ -467,6 +467,34 @@ const AdminDashboard = () => {
               </button>
               
               <button
+                onClick={() => navigate('/admin/user-management')}
+                style={{
+                  background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.4rem',
+                  borderRadius: '6px',
+                  fontSize: '0.55rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 1px 3px rgba(231,76,60,0.3)',
+                  textAlign: 'center'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 8px rgba(231,76,60,0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 1px 3px rgba(231,76,60,0.3)';
+                }}
+              >
+                <i className="fas fa-users-cog" style={{marginBottom: '0.1rem', display: 'block'}}></i>
+                User Management
+              </button>
+              
+              <button
                 onClick={() => navigate('/admin/transactions')}
                 style={{
                   background: 'linear-gradient(135deg, #6f42c1 0%, #495057 100%)',
@@ -556,7 +584,7 @@ const AdminDashboard = () => {
                           fontSize: '0.5rem',
                           color: '#6c757d',
                           fontFamily: 'monospace'
-                        }}>ID: {transaction._id.substring(0, 8)}...</span>
+                        }}>ID: {transaction._id ? transaction._id.substring(0, 8) + '...' : 'N/A'}</span>
                         <span style={{
                           fontSize: '0.6rem',
                           fontWeight: '600',

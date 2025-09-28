@@ -213,17 +213,23 @@ exports.getAllTransactions = async (req, res) => {
 
 // Approve or reject a transaction
 exports.updateTransactionStatus = async (req, res) => {
+  console.log('=== UPDATE TRANSACTION STATUS CALLED ===');
+  console.log('Request params:', req.params);
+  console.log('Request body:', JSON.stringify(req.body, null, 2));
+  
   try {
     const { id } = req.params;
     const { status, notes, transactionId, failureReason } = req.body;
     
-    console.log(`${status} transaction ${id} by admin ${req.user.id}`);
+    console.log(`Attempting to ${status} transaction ${id} by admin ${req.user.id}`);
+    console.log('Status received:', status, 'Type:', typeof status);
     
     // Validate status
-    if (!['approved', 'rejected'].includes(status)) {
+    if (!['approved', 'rejected', 'awaiting_approval'].includes(status)) {
+      console.log('Status validation failed. Received status:', status);
       return res.status(400).json({
         status: 'fail',
-        message: 'Status must be either approved or rejected',
+        message: 'Status must be approved, rejected, or awaiting_approval',
       });
     }
     
@@ -242,11 +248,23 @@ exports.updateTransactionStatus = async (req, res) => {
       });
     }
     
+    // Store previous status before updating
+    const previousStatus = transaction.status;
+    
     // Update transaction status and admin metadata
     transaction.status = status;
-    transaction.approvedBy = req.user.id;
-    transaction.approvalDate = new Date();
-    transaction.approvalNotes = notes || '';
+    
+    // Only set approval metadata for approved/rejected status
+    if (status !== 'awaiting_approval') {
+      transaction.approvedBy = req.user.id;
+      transaction.approvalDate = new Date();
+      transaction.approvalNotes = notes || '';
+    } else {
+      // Clear approval metadata when reverting to awaiting approval
+      transaction.approvedBy = undefined;
+      transaction.approvalDate = undefined;
+      transaction.approvalNotes = notes || '';
+    }
     
     // Handle manual processing fields
     if (status === 'approved' && transactionId && transactionId.trim()) {
@@ -269,12 +287,36 @@ exports.updateTransactionStatus = async (req, res) => {
           wallet.balance += transaction.amount;
           console.log(`Wallet balance updated: +${transaction.amount}`);
           await wallet.save();
+        } else if (['mobile-recharge', 'dth-recharge', 'bill-payment'].includes(transaction.type)) {
+          // For recharge/bill payment transactions being re-approved after rejection
+          // We need to deduct the amount again since it was refunded during rejection
+          if (previousStatus === 'rejected') {
+            wallet.balance -= transaction.amount;
+            console.log(`Amount deducted again: -${transaction.amount} for re-approved ${transaction.type}`);
+            await wallet.save();
+          }
+          // Note: Initial deduction happens during transaction creation in rechargeController
+        }
+      }
+    } else if (status === 'rejected') {
+      // Handle refunds for rejected recharge/bill payment transactions
+      if (['mobile-recharge', 'dth-recharge', 'bill-payment'].includes(transaction.type)) {
+        const wallet = await Wallet.findById(transaction.wallet._id);
+        if (wallet) {
+          // Only refund if the transaction was previously approved or pending
+          // (to avoid double refunds)
+          if (['approved', 'pending', 'awaiting_approval'].includes(previousStatus)) {
+            wallet.balance += transaction.amount;
+            console.log(`Refund processed: +${transaction.amount} for rejected ${transaction.type}`);
+            await wallet.save();
+          }
         }
       }
     }
+    // No wallet updates needed for 'awaiting_approval' status
 
-    // Send notification to user
-    if (transaction.wallet && transaction.wallet.user && transaction.wallet.user._id) {
+    // Send notification to user (only for approved/rejected, not for awaiting_approval)
+    if (status !== 'awaiting_approval' && transaction.wallet && transaction.wallet.user && transaction.wallet.user._id) {
       let message = '';
       if (status === 'approved') {
         if (transaction.type === 'topup') {
@@ -284,6 +326,12 @@ exports.updateTransactionStatus = async (req, res) => {
         }
       } else {
         message = `Your ${transaction.type === 'topup' ? 'top-up' : transaction.type.replace('-', ' ')} request of ₹${transaction.amount} has been rejected.`;
+        
+        // Add refund information for recharge/bill payment transactions
+        if (['mobile-recharge', 'dth-recharge', 'bill-payment'].includes(transaction.type)) {
+          message += ` The amount has been refunded to your wallet.`;
+        }
+        
         if (failureReason) {
           message += ` Reason: ${failureReason}`;
         }
@@ -349,10 +397,11 @@ exports.bulkApproveTransactions = async (req, res) => {
           continue;
         }
         
-        if (transaction.status !== 'awaiting_approval') {
-          results.skipped.push({ id: transactionId, reason: 'Transaction already processed' });
-          continue;
-        }
+        // Allow status changes from any state
+        // if (transaction.status !== 'awaiting_approval') {
+        //   results.skipped.push({ id: transactionId, reason: 'Transaction already processed' });
+        //   continue;
+        // }
         
         // Update transaction
         transaction.status = 'approved';
@@ -416,8 +465,14 @@ exports.bulkApproveTransactions = async (req, res) => {
 
 // Bulk reject transactions
 exports.bulkRejectTransactions = async (req, res) => {
+  console.log('=== BULK REJECT FUNCTION CALLED ===');
+  console.log('Request body:', JSON.stringify(req.body, null, 2));
+  
   try {
     const { transactionIds, notes, failureReason } = req.body;
+    
+    console.log('Bulk reject request body:', req.body);
+    console.log('Transaction IDs received:', transactionIds);
     
     if (!transactionIds || !Array.isArray(transactionIds) || transactionIds.length === 0) {
       return res.status(400).json({
@@ -448,10 +503,11 @@ exports.bulkRejectTransactions = async (req, res) => {
           continue;
         }
         
-        if (transaction.status !== 'awaiting_approval') {
-          results.skipped.push({ id: transactionId, reason: 'Transaction already processed' });
-          continue;
-        }
+        // Allow status changes from any state
+        // if (transaction.status !== 'awaiting_approval') {
+        //   results.skipped.push({ id: transactionId, reason: 'Transaction already processed' });
+        //   continue;
+        // }
         
         // Update transaction
         transaction.status = 'rejected';

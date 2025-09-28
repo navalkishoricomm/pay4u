@@ -190,7 +190,7 @@ const Transactions = () => {
                          'Transaction'}
                       </h4>
                       <p style={{margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)'}}>
-                        ID: {transaction.transactionId || transaction._id.substring(0, 8) + '...'}
+                        ID: {transaction.transactionId || (transaction._id ? transaction._id.substring(0, 8) + '...' : 'N/A')}
                       </p>
                     </div>
                     <div style={{textAlign: 'right'}}>

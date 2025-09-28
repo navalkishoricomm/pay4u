@@ -83,10 +83,10 @@ exports.performRemitterKyc = catchAsync(async (req, res, next) => {
   const { kycType, piddata, wadh } = req.body;
   const userId = req.user.id;
 
-  // Verify remitter belongs to user
-  const remitter = await DmtRemitter.findOne({ _id: remitterId, userId });
+  // Verify remitter exists (allow any user to perform KYC for any remitter)
+  const remitter = await DmtRemitter.findOne({ _id: remitterId });
   if (!remitter) {
-    return next(new AppError('Remitter not found or access denied', 404));
+    return next(new AppError('Remitter not found', 404));
   }
 
   try {
@@ -155,9 +155,9 @@ exports.registerBeneficiary = catchAsync(async (req, res, next) => {
   // Find remitter - either by provided ID or user's default remitter
   let remitter;
   if (remitterId) {
-    remitter = await DmtRemitter.findOne({ _id: remitterId, userId });
+    remitter = await DmtRemitter.findOne({ _id: remitterId });
   } else {
-    // Find user's remitter automatically
+    // Find user's remitter automatically (still check userId for default remitter)
     remitter = await DmtRemitter.findOne({ userId });
   }
   
@@ -244,10 +244,10 @@ exports.verifyBeneficiary = catchAsync(async (req, res, next) => {
   const { beneficiaryId } = req.params;
   const userId = req.user.id;
 
-  // Verify beneficiary belongs to user
-  const beneficiary = await DmtBeneficiary.findOne({ _id: beneficiaryId, userId });
+  // Verify beneficiary exists (allow any user to verify any beneficiary)
+  const beneficiary = await DmtBeneficiary.findOne({ _id: beneficiaryId });
   if (!beneficiary) {
-    return next(new AppError('Beneficiary not found or access denied', 404));
+    return next(new AppError('Beneficiary not found', 404));
   }
 
   try {
@@ -278,10 +278,10 @@ exports.deleteBeneficiary = catchAsync(async (req, res, next) => {
   const { beneficiaryId } = req.params;
   const userId = req.user.id;
 
-  // Verify beneficiary belongs to user
-  const beneficiary = await DmtBeneficiary.findOne({ _id: beneficiaryId, userId });
+  // Verify beneficiary exists (allow any user to delete any beneficiary)
+  const beneficiary = await DmtBeneficiary.findOne({ _id: beneficiaryId });
   if (!beneficiary) {
-    return next(new AppError('Beneficiary not found or access denied', 404));
+    return next(new AppError('Beneficiary not found', 404));
   }
 
   // Check if beneficiary has any pending transactions
@@ -316,16 +316,16 @@ exports.processTransaction = catchAsync(async (req, res, next) => {
   const ipAddress = req.ip;
   const userAgent = req.get('User-Agent');
 
-  // Verify remitter belongs to user
-  const remitter = await DmtRemitter.findOne({ _id: remitterId, userId });
+  // Verify remitter exists (allow any user to use any remitter)
+  const remitter = await DmtRemitter.findOne({ _id: remitterId });
   if (!remitter) {
-    return next(new AppError('Remitter not found or access denied', 404));
+    return next(new AppError('Remitter not found', 404));
   }
 
-  // Verify beneficiary belongs to user
-  const beneficiary = await DmtBeneficiary.findOne({ _id: beneficiaryId, userId });
+  // Verify beneficiary exists (allow any user to use any beneficiary)
+  const beneficiary = await DmtBeneficiary.findOne({ _id: beneficiaryId });
   if (!beneficiary) {
-    return next(new AppError('Beneficiary not found or access denied', 404));
+    return next(new AppError('Beneficiary not found', 404));
   }
 
   // Check user balance
@@ -460,10 +460,10 @@ exports.getRemitterBeneficiaries = catchAsync(async (req, res, next) => {
   const { remitterId } = req.params;
   const userId = req.user.id;
 
-  // Verify remitter belongs to user
-  const remitter = await DmtRemitter.findOne({ _id: remitterId, userId });
+  // Verify remitter exists (allow any user to access any remitter's beneficiaries)
+  const remitter = await DmtRemitter.findOne({ _id: remitterId });
   if (!remitter) {
-    return next(new AppError('Remitter not found or access denied', 404));
+    return next(new AppError('Remitter not found', 404));
   }
 
   try {

@@ -66,6 +66,8 @@ const BillPayment = () => {
       });
       
       toast.success('Bill payment request submitted for approval');
+      // Refresh wallet balance after successful payment
+      await fetchWalletData();
       navigate('/transactions');
     } catch (error) {
       console.error('Error submitting bill payment request:', error);

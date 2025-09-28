@@ -44,6 +44,7 @@ import ApiProviders from './pages/admin/ApiProviders';
 import OperatorConfig from './pages/admin/OperatorConfig';
 import ManualRecharges from './pages/admin/ManualRecharges';
 import DMTTransactions from './pages/admin/DMTTransactions';
+import UserManagement from './pages/admin/UserManagement';
 import AdminNotifications from './pages/AdminNotifications';
 import UserNotifications from './components/UserNotifications';
 import ChargeSlabManagement from './components/admin/ChargeSlabManagement';
@@ -208,6 +209,14 @@ function App() {
              element={
                <AdminRoute>
                  <AdminDashboard />
+               </AdminRoute>
+             } 
+           />
+           <Route 
+             path="/admin/user-management" 
+             element={
+               <AdminRoute>
+                 <UserManagement />
                </AdminRoute>
              } 
            />

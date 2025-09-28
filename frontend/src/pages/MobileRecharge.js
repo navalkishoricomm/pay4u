@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const MobileRecharge = () => {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [walletBalance, setWalletBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -14,13 +16,26 @@ const MobileRecharge = () => {
     operator: '',
     plan: '',
     amount: '',
+    circle: 'DELHI'
   });
+  
+  const [operators, setOperators] = useState([]);
 
-  const { mobileNumber, operator, plan, amount } = formData;
+
+  const { mobileNumber, operator, plan, amount, circle } = formData;
 
   useEffect(() => {
-    fetchWalletData();
-  }, []);
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        navigate('/login');
+        return;
+      }
+      fetchWalletData();
+      fetchOperators();
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+  
+
 
   const fetchWalletData = async () => {
     try {
@@ -33,6 +48,18 @@ const MobileRecharge = () => {
       setLoading(false);
     }
   };
+  
+  const fetchOperators = async () => {
+    try {
+      const response = await axios.get('/recharge/operators?type=mobile');
+      setOperators(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching operators:', error);
+      toast.error('Failed to load operators');
+    }
+  };
+  
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -42,7 +69,7 @@ const MobileRecharge = () => {
     e.preventDefault();
     
     // Validation
-    if (!mobileNumber || !operator || !amount) {
+    if (!mobileNumber || !operator || !amount || !circle) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -52,26 +79,34 @@ const MobileRecharge = () => {
       return;
     }
     
-    if (parseFloat(amount) <= 0) {
+    const amountValue = parseFloat(amount);
+    if (amountValue <= 0) {
       toast.error('Please enter a valid amount');
       return;
     }
     
+    // Validate amount range (1 to 10000)
+     if (amountValue < 1 || amountValue > 10000) {
+       toast.error('Amount must be between ₹1 and ₹10000');
+       return;
+     }
+    
     setIsProcessing(true);
     
     try {
-      const response = await axios.post('/transactions/process', {
-        type: 'mobile-recharge',
-        amount: parseFloat(amount),
-        metadata: {
-          mobileNumber,
-          operator,
-          plan
-        }
+      const response = await axios.post('/recharge/mobile', {
+        mobileNumber,
+        operator: operator,
+        amount: amountValue,
+        circle: circle
       });
       
-      toast.success('Mobile recharge request submitted for approval');
-      navigate('/transactions');
+      if (response.data.status === 'success') {
+        toast.success(`Recharge ${response.data.data.status === 'pending' ? 'submitted for approval' : 'completed successfully'}`);
+        // Refresh wallet balance after successful recharge
+        await fetchWalletData();
+        navigate('/transactions');
+      }
     } catch (error) {
       console.error('Error submitting recharge request:', error);
       toast.error('Failed to submit recharge request');
@@ -80,12 +115,16 @@ const MobileRecharge = () => {
     }
   };
 
-  // Sample operators and plans (in a real app, these would come from an API)
-  const operators = [
-    { id: 'airtel', name: 'Airtel' },
-    { id: 'jio', name: 'Jio' },
-    { id: 'vi', name: 'Vi' },
-    { id: 'bsnl', name: 'BSNL' },
+  // Available circles
+  const circles = [
+    { code: 'DELHI', name: 'Delhi' },
+    { code: 'MUMBAI', name: 'Mumbai' },
+    { code: 'KOLKATA', name: 'Kolkata' },
+    { code: 'CHENNAI', name: 'Chennai' },
+    { code: 'BANGALORE', name: 'Bangalore' },
+    { code: 'HYDERABAD', name: 'Hyderabad' },
+    { code: 'PUNE', name: 'Pune' },
+    { code: 'AHMEDABAD', name: 'Ahmedabad' }
   ];
 
   const plans = [
@@ -95,8 +134,12 @@ const MobileRecharge = () => {
     { id: 'custom', name: 'Custom Amount' },
   ];
 
-  if (loading) {
+  if (authLoading || loading) {
     return <div className="loading">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will redirect to login
   }
 
   return (
@@ -122,6 +165,7 @@ const MobileRecharge = () => {
               pattern="[0-9]{10}"
               required
             />
+
           </div>
           
           <div className="form-group">
@@ -136,8 +180,26 @@ const MobileRecharge = () => {
             >
               <option value="">Select an operator</option>
               {operators.map((op) => (
-                <option key={op.id} value={op.id}>
+                <option key={op.code} value={op.code}>
                   {op.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="circle">Select Circle</label>
+            <select
+              id="circle"
+              name="circle"
+              value={circle}
+              onChange={handleChange}
+              className="form-control"
+              required
+            >
+              {circles.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
                 </option>
               ))}
             </select>

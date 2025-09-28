@@ -225,6 +225,52 @@ const AllTransactions = () => {
      }
    };
 
+  const handleChangeToAwaiting = async (transactionId) => {
+    const notes = prompt('Enter notes for status change (optional):');
+    if (notes === null) return; // User cancelled
+
+    try {
+      await axios.patch(`/admin/transactions/${transactionId}`, {
+        status: 'awaiting_approval',
+        notes
+      });
+      toast.success('Transaction status changed to awaiting approval');
+      fetchTransactions();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to change transaction status');
+    }
+  };
+
+  const handleBulkChangeToAwaiting = async () => {
+    if (selectedTransactions.length === 0) {
+      toast.warning('Please select transactions to change status');
+      return;
+    }
+
+    const notes = prompt('Enter notes for bulk status change (optional):');
+    if (notes === null) return; // User cancelled
+
+    try {
+      setBulkLoading(true);
+      
+      // Process each transaction individually since there's no bulk endpoint for awaiting_approval
+      const promises = selectedTransactions.map(transactionId => 
+        axios.patch(`/admin/transactions/${transactionId}`, {
+          status: 'awaiting_approval',
+          notes
+        })
+      );
+      
+      await Promise.all(promises);
+      toast.success(`${selectedTransactions.length} transactions changed to awaiting approval`);
+      fetchTransactions();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to change transaction statuses');
+    } finally {
+       setBulkLoading(false);
+     }
+   };
+
   const getStatusClass = (status) => {
     switch (status) {
       case 'completed': return 'status-completed';
@@ -447,6 +493,13 @@ const AllTransactions = () => {
             >
               {bulkLoading ? 'Processing...' : 'Bulk Reject'}
             </button>
+            <button 
+              className="btn btn-warning" 
+              onClick={handleBulkChangeToAwaiting}
+              disabled={bulkLoading}
+            >
+              {bulkLoading ? 'Processing...' : 'Change to Awaiting'}
+            </button>
           </div>
         </div>
       )}
@@ -494,7 +547,7 @@ const AllTransactions = () => {
                       onChange={() => handleSelectTransaction(transaction._id)}
                     />
                   </td>
-                  <td>{transaction._id.substring(0, 8)}...</td>
+                  <td>{transaction._id ? transaction._id.substring(0, 8) + '...' : 'N/A'}</td>
                   <td>
                     {transaction.wallet?.user?.name || 'N/A'}<br />
                     <small>{transaction.wallet?.user?.email || 'N/A'}</small>
@@ -526,6 +579,35 @@ const AllTransactions = () => {
                         >
                           ✗
                         </button>
+                      </>
+                    )}
+                    {transaction.status !== 'awaiting_approval' && (
+                      <>
+                        <button 
+                          className="btn btn-sm btn-warning"
+                          onClick={() => handleChangeToAwaiting(transaction._id)}
+                          title="Change to Awaiting Approval"
+                        >
+                          ⏳
+                        </button>
+                        {(transaction.status === 'approved' || transaction.status === 'rejected') && (
+                          <>
+                            <button 
+                              className="btn btn-sm btn-success"
+                              onClick={() => handleSingleApprove(transaction._id)}
+                              title="Approve"
+                            >
+                              ✓
+                            </button>
+                            <button 
+                              className="btn btn-sm btn-danger"
+                              onClick={() => handleSingleReject(transaction._id)}
+                              title="Reject"
+                            >
+                              ✗
+                            </button>
+                          </>
+                        )}
                       </>
                     )}
                   </td>

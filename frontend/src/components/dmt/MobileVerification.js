@@ -28,21 +28,25 @@ const MobileVerification = ({ onVerificationComplete }) => {
       const response = await dmtService.verifyMobile(mobile);
       
       if (response.success) {
-        const { exists, isOwner, remitter, message } = response.data;
+        const { exists, canUse, isOwner, remitter, message } = response.data;
         
-        if (exists && isOwner) {
-          // Remitter exists and belongs to current user
-          setSuccess('Mobile number verified successfully!');
+        if (exists && canUse) {
+          // Remitter exists and can be used by any user
+          const successMessage = isOwner ? 
+            'Mobile number verified successfully!' : 
+            'Mobile number verified! You can use this remitter.';
+          setSuccess(successMessage);
           setTimeout(() => {
             onVerificationComplete({
               verified: true,
               remitter: remitter,
-              needsRegistration: false
+              needsRegistration: false,
+              isOwner: isOwner
             });
           }, 1000);
-        } else if (exists && !isOwner) {
-          // Mobile number registered with different user
-          setError(message || 'This mobile number is already registered with another account');
+        } else if (exists && !canUse) {
+          // This case should not happen with our new logic, but keeping for safety
+          setError(message || 'This remitter cannot be used');
         } else {
           // Mobile number not registered - needs registration
           setSuccess('Mobile number available for registration!');

@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
 const OperatorConfig = require('../models/OperatorConfig');
 const rechargeService = require('../services/rechargeService');
@@ -21,13 +22,18 @@ exports.mobileRecharge = catchAsync(async (req, res, next) => {
     return next(new AppError('Invalid mobile number format', 400));
   }
 
-  // Check user balance
+  // Check user and wallet balance
   const user = await User.findById(userId);
   if (!user) {
     return next(new AppError('User not found', 404));
   }
 
-  if (user.walletBalance < amount) {
+  const wallet = await Wallet.findOne({ user: userId });
+  if (!wallet) {
+    return next(new AppError('Wallet not found', 404));
+  }
+
+  if (wallet.balance < amount) {
     return next(new AppError('Insufficient wallet balance', 400));
   }
 
@@ -42,22 +48,10 @@ exports.mobileRecharge = catchAsync(async (req, res, next) => {
       circle
     });
 
-    // Deduct amount from user wallet if successful or pending
-    if (result.status === 'success' || result.status === 'pending') {
-      user.walletBalance -= amount;
-      await user.save();
-
-      // Create wallet transaction record
-      const walletTransaction = new Transaction({
-        userId,
-        type: 'debit',
-        amount,
-        description: `Mobile recharge for ${mobileNumber}`,
-        category: 'recharge',
-        status: result.status === 'success' ? 'completed' : 'pending',
-        relatedTransactionId: result.transaction._id
-      });
-      await walletTransaction.save();
+    // Deduct amount from wallet if successful, pending, or awaiting approval
+    if (result.status === 'success' || result.status === 'pending' || result.status === 'awaiting_approval') {
+      wallet.balance -= amount;
+      await wallet.save();
     }
 
     res.status(200).json({
@@ -70,7 +64,7 @@ exports.mobileRecharge = catchAsync(async (req, res, next) => {
         status: result.status,
         message: result.message,
         requiresApproval: result.requiresApproval,
-        remainingBalance: user.walletBalance
+        remainingBalance: wallet.balance
       }
     });
   } catch (error) {
@@ -88,13 +82,18 @@ exports.dthRecharge = catchAsync(async (req, res, next) => {
     return next(new AppError('All fields are required: customerNumber, operator, amount', 400));
   }
 
-  // Check user balance
+  // Check user and wallet balance
   const user = await User.findById(userId);
   if (!user) {
     return next(new AppError('User not found', 404));
   }
 
-  if (user.walletBalance < amount) {
+  const wallet = await Wallet.findOne({ user: userId });
+  if (!wallet) {
+    return next(new AppError('Wallet not found', 404));
+  }
+
+  if (wallet.balance < amount) {
     return next(new AppError('Insufficient wallet balance', 400));
   }
 
@@ -108,22 +107,10 @@ exports.dthRecharge = catchAsync(async (req, res, next) => {
       amount
     });
 
-    // Deduct amount from user wallet if successful or pending
+    // Deduct amount from wallet if successful or pending
     if (result.status === 'success' || result.status === 'pending') {
-      user.walletBalance -= amount;
-      await user.save();
-
-      // Create wallet transaction record
-      const walletTransaction = new Transaction({
-        userId,
-        type: 'debit',
-        amount,
-        description: `DTH recharge for ${customerNumber}`,
-        category: 'recharge',
-        status: result.status === 'success' ? 'completed' : 'pending',
-        relatedTransactionId: result.transaction._id
-      });
-      await walletTransaction.save();
+      wallet.balance -= amount;
+      await wallet.save();
     }
 
     res.status(200).json({
@@ -136,7 +123,7 @@ exports.dthRecharge = catchAsync(async (req, res, next) => {
         status: result.status,
         message: result.message,
         requiresApproval: result.requiresApproval,
-        remainingBalance: user.walletBalance
+        remainingBalance: wallet.balance
       }
     });
   } catch (error) {

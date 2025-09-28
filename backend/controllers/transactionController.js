@@ -118,8 +118,13 @@ exports.processTransactionRequest = async (req, res) => {
       }
     }
 
+    // Generate unique transaction ID
+    const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    
     // Create transaction with awaiting_approval status
     const transaction = new Transaction({
+      transactionId,
+      userId: req.user.id,
       wallet: wallet._id,
       type,
       amount: parseFloat(amount),
@@ -243,8 +248,13 @@ const processTransaction = async (req, res, type) => {
         });
     }
 
+    // Generate unique transaction ID
+    const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    
     // Create transaction record
     const transaction = await Transaction.create({
+      transactionId,
+      userId: req.user.id,
       wallet: wallet._id,
       amount: parseFloat(amount),
       type,
@@ -385,43 +395,27 @@ exports.billPayment = async (req, res) => {
 // Get transaction status updates
 exports.getStatusUpdates = async (req, res) => {
   try {
-    console.log(`Simulating fetching transaction status updates for user: ${req.user.id}`);
+    console.log(`Fetching recent transaction status updates for user: ${req.user.id}`);
     
-    // Create mock transaction status updates for development
-    const statusUpdates = [
-      {
-        _id: 'status-update-1',
-        transactionId: 'mock-transaction-1',
-        userId: req.user.id,
-        status: 'approved',
-        amount: 500,
-        type: 'topup',
-        description: 'Wallet top-up approved',
-        createdAt: new Date(Date.now() - 3600000) // 1 hour ago
-      },
-      {
-        _id: 'status-update-2',
-        transactionId: 'mock-transaction-2',
-        userId: req.user.id,
-        status: 'completed',
-        amount: 100,
-        type: 'mobile-recharge',
-        description: 'Mobile recharge completed',
-        createdAt: new Date(Date.now() - 7200000) // 2 hours ago
-      },
-      {
-        _id: 'status-update-3',
-        transactionId: 'mock-transaction-3',
-        userId: req.user.id,
-        status: 'awaiting_approval',
-        amount: 1000,
-        type: 'topup',
-        description: 'Wallet top-up awaiting approval',
-        createdAt: new Date(Date.now() - 10800000) // 3 hours ago
-      }
-    ];
+    // Get user's wallet to find their transactions
+    const wallet = await Wallet.findOne({ user: req.user.id });
+    if (!wallet) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Wallet not found'
+      });
+    }
     
-    console.log(`Returning ${statusUpdates.length} mock transaction status updates`);
+    // Fetch recent transactions for this user (last 10 transactions)
+    const statusUpdates = await Transaction.find({ 
+      wallet: wallet._id 
+    })
+    .sort({ updatedAt: -1 })
+    .limit(10)
+    .select('_id transactionId userId status amount type description createdAt updatedAt notes')
+    .lean();
+    
+    console.log(`Returning ${statusUpdates.length} recent transaction status updates`);
     
     res.status(200).json({
       status: 'success',
@@ -431,6 +425,7 @@ exports.getStatusUpdates = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error('Error fetching transaction status updates:', error);
     res.status(500).json({
       status: 'error',
       message: error.message,

@@ -30,7 +30,7 @@ const BrandVouchers = () => {
 
   const fetchVouchers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/vouchers/brands');
+      const response = await fetch('http://localhost:5001/api/vouchers/brands');
       const data = await response.json();
       if (data.success) {
         setVouchers(data.data.filter(voucher => voucher.isActive));
@@ -45,7 +45,7 @@ const BrandVouchers = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/vouchers/categories');
+      const response = await fetch('http://localhost:5001/api/vouchers/categories');
       const data = await response.json();
       if (data.success) {
         setCategories(['All', ...data.data]);
@@ -74,7 +74,7 @@ const BrandVouchers = () => {
 
   const fetchDenominations = async (voucherId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/vouchers/brands/${voucherId}/denominations`);
+      const response = await fetch(`http://localhost:5001/api/vouchers/brands/${voucherId}/denominations`);
       const data = await response.json();
       if (data.success) {
         // Filter active denominations with available quantity
@@ -96,7 +96,7 @@ const BrandVouchers = () => {
   const fetchUserOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/vouchers/my-orders', {
+      const response = await fetch('http://localhost:5001/api/vouchers/my-orders', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -136,7 +136,7 @@ const BrandVouchers = () => {
     setPurchasing(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/vouchers/purchase', {
+      const response = await fetch('http://localhost:5001/api/vouchers/purchase', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +185,7 @@ const BrandVouchers = () => {
   const handleDownloadVoucher = async (orderId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/vouchers/orders/${orderId}/download-file`, {
+      const response = await fetch(`http://localhost:5001/api/vouchers/orders/${orderId}/download-file`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -145,6 +145,15 @@
   background: #c82333;
 }
 
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #e0a800;
+}
+
 .transactions-section {
   background: white;
   border-radius: 8px;

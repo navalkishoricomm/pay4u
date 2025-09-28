@@ -1,4 +1,5 @@
 const axios = require('axios');
+const mongoose = require('mongoose');
 const ApiProvider = require('../models/ApiProvider');
 const OperatorConfig = require('../models/OperatorConfig');
 const Transaction = require('../models/Transaction');
@@ -38,7 +39,7 @@ class RechargeService {
     // Validate amount
     if (!operatorConfig.isAmountValid(amount)) {
       throw new AppError(
-        `Amount must be between ₹${operatorConfig.minAmount} and ₹${operatorConfig.maxAmount}`,
+        `Amount must be between ₹1 and ₹10000`,
         400
       );
     }
@@ -79,6 +80,13 @@ class RechargeService {
       transaction.status = 'failed';
       transaction.failureReason = error.message;
       await transaction.save();
+
+      // Refund wallet balance on failure
+      const wallet = await Wallet.findOne({ user: new mongoose.Types.ObjectId(rechargeData.userId) });
+      if (wallet) {
+        wallet.balance += amount;
+        await wallet.save();
+      }
 
       // Update operator statistics
       await operatorConfig.updateStats('failed', amount);
@@ -165,7 +173,7 @@ class RechargeService {
       transaction.adminRemarks = 'Auto-approved based on amount threshold';
     } else {
       // Requires manual approval
-      transaction.status = 'pending';
+      transaction.status = 'awaiting_approval';
       transaction.pendingReason = 'Awaiting manual approval';
       
       // Set approval timeout
@@ -391,10 +399,19 @@ class RechargeService {
    */
   async createTransaction(data) {
     // Get user's wallet
-    const wallet = await Wallet.findOne({ userId: data.userId });
+    const wallet = await Wallet.findOne({ user: new mongoose.Types.ObjectId(data.userId) });
     if (!wallet) {
       throw new AppError('User wallet not found', 404);
     }
+
+    // Check wallet balance
+    if (wallet.balance < data.amount) {
+      throw new AppError('Insufficient wallet balance', 400);
+    }
+
+    // Deduct amount from wallet immediately when transaction is created
+    wallet.balance -= data.amount;
+    await wallet.save();
 
     const transactionId = this.generateTransactionId();
     

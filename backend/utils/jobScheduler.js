@@ -5,6 +5,10 @@ const DmtTransaction = require('../models/DmtTransaction');
 class JobScheduler {
   constructor() {
     this.jobs = new Map();
+    this.consecutiveErrors = 0;
+    this.maxConsecutiveErrors = 5;
+    this.circuitBreakerTimeout = 30 * 60 * 1000; // 30 minutes
+    this.lastCircuitBreakerReset = Date.now();
   }
 
   // Start all scheduled jobs
@@ -22,9 +26,9 @@ class JobScheduler {
     this.jobs.clear();
   }
 
-  // DMT transaction status update job - runs every 5 minutes
+  // DMT transaction status update job - runs every 15 minutes
   startDmtStatusUpdateJob() {
-    const job = cron.schedule('*/5 * * * *', async () => {
+    const job = cron.schedule('*/15 * * * *', async () => {
       try {
         console.log('Running DMT transaction status update job...');
         await this.updatePendingDmtTransactions();
@@ -37,18 +41,32 @@ class JobScheduler {
 
     this.jobs.set('dmtStatusUpdate', job);
     job.start();
-    console.log('DMT transaction status update job scheduled (every 5 minutes)');
+    console.log('DMT transaction status update job scheduled (every 15 minutes)');
   }
 
   // Update pending DMT transactions
   async updatePendingDmtTransactions() {
+    // Circuit breaker: skip if too many consecutive errors
+    if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
+      const timeSinceLastReset = Date.now() - this.lastCircuitBreakerReset;
+      if (timeSinceLastReset < this.circuitBreakerTimeout) {
+        console.log(`Circuit breaker active: skipping DMT status update (${this.consecutiveErrors} consecutive errors)`);
+        return;
+      } else {
+        // Reset circuit breaker after timeout
+        this.consecutiveErrors = 0;
+        this.lastCircuitBreakerReset = Date.now();
+        console.log('Circuit breaker reset: resuming DMT status updates');
+      }
+    }
+
     try {
       // Find transactions that are still pending or processing
       const pendingTransactions = await DmtTransaction.find({
         status: { $in: ['PENDING', 'PROCESSING', 'INITIATED'] },
         paysprintTransactionId: { $exists: true, $ne: null },
         updatedAt: { $lt: new Date(Date.now() - 2 * 60 * 1000) } // Updated more than 2 minutes ago
-      }).limit(50); // Process max 50 transactions per run
+      }).limit(20); // Process max 20 transactions per run
 
       if (pendingTransactions.length === 0) {
         console.log('No pending DMT transactions to update');
@@ -83,13 +101,20 @@ class JobScheduler {
           console.error(`Error updating transaction ${transaction.transactionId}:`, error.message);
         }
 
-        // Add small delay between requests to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Add delay between requests to avoid rate limiting and reduce system load
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       console.log(`DMT status update completed: ${updatedCount} updated, ${errorCount} errors`);
+      
+      // Reset consecutive errors on successful completion
+      if (errorCount === 0) {
+        this.consecutiveErrors = 0;
+      }
     } catch (error) {
       console.error('Error in updatePendingDmtTransactions:', error);
+      this.consecutiveErrors++;
+      console.log(`Consecutive errors: ${this.consecutiveErrors}/${this.maxConsecutiveErrors}`);
     }
   }
 

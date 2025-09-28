@@ -144,36 +144,26 @@ router.post('/remitter/verify-mobile', [
     const remitter = await DmtRemitter.findByMobile(mobile);
     
     if (remitter) {
-      // Check if this remitter belongs to the current user
-      if (remitter.userId.toString() === req.user.id) {
-        return res.status(200).json({
-          success: true,
-          data: {
-            exists: true,
-            isOwner: true,
-            remitter: {
-              id: remitter._id,
-              remitterId: remitter._id,
-              mobile: remitter.mobile,
-              firstName: remitter.firstName,
-              lastName: remitter.lastName,
-              kycStatus: remitter.kycStatus,
-              monthlyLimit: remitter.monthlyLimit,
-              monthlyUsed: remitter.monthlyUsed,
-              remainingLimit: remitter.getRemainingMonthlyLimit()
-            }
+      // Allow any user to use any verified remitter number
+      return res.status(200).json({
+        success: true,
+        data: {
+          exists: true,
+          canUse: true,
+          remitter: {
+            id: remitter._id,
+            remitterId: remitter._id,
+            mobile: remitter.mobile,
+            firstName: remitter.firstName,
+            lastName: remitter.lastName,
+            kycStatus: remitter.kycStatus,
+            monthlyLimit: remitter.monthlyLimit,
+            monthlyUsed: remitter.monthlyUsed,
+            remainingLimit: remitter.getRemainingMonthlyLimit(),
+            isOwner: remitter.userId.toString() === req.user.id
           }
-        });
-      } else {
-        return res.status(200).json({
-          success: true,
-          data: {
-            exists: true,
-            isOwner: false,
-            message: 'Mobile number is already registered with another account'
-          }
-        });
-      }
+        }
+      });
     } else {
       return res.status(200).json({
         success: true,

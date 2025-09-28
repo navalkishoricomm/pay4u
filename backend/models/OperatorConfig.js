@@ -255,12 +255,9 @@ operatorConfigSchema.methods.updateStats = function(status, amount, processingTi
 };
 
 operatorConfigSchema.methods.isAmountValid = function(amount) {
-  if (amount < this.minAmount || amount > this.maxAmount) {
+  // Allow any amount between 1 to 10000
+  if (amount < 1 || amount > 10000) {
     return false;
-  }
-  
-  if (this.allowedAmounts.length > 0) {
-    return this.allowedAmounts.includes(amount);
   }
   
   return true;

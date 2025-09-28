@@ -16,7 +16,7 @@ async function checkWalletBalance() {
     console.log('=== Check Wallet Balance Issue ===');
     
     // Login to get token
-    const loginResponse = await axios.post('http://localhost:5000/api/auth/login', {
+    const loginResponse = await axios.post('http://localhost:5001/api/auth/login', {
       email: 'mukgarg11@gmail.com',
       password: 'password123'
     });
@@ -45,7 +45,7 @@ async function checkWalletBalance() {
     // Check wallet via API
     console.log('\n=== API Wallet Check ===');
     try {
-      const apiResponse = await axios.get('http://localhost:5000/api/wallet/balance', {
+      const apiResponse = await axios.get('http://localhost:5001/api/wallet/balance', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

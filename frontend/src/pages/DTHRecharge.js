@@ -66,6 +66,8 @@ const DTHRecharge = () => {
       });
       
       toast.success('DTH recharge request submitted for approval');
+      // Refresh wallet balance after successful recharge
+      await fetchWalletData();
       navigate('/transactions');
     } catch (error) {
       console.error('Error submitting DTH recharge request:', error);
