@@ -118,9 +118,15 @@ if [ ! -f ".env" ]; then
     fi
 fi
 
-# Start backend
-log_info "Starting backend server..."
-NODE_ENV=production pm2 start server.js --name "$BACKEND_PM2_NAME" --update-env
+# Start/Restart backend
+log_info "Starting/Restarting backend server..."
+if pm2 describe "$BACKEND_PM2_NAME" > /dev/null 2>&1; then
+    log_info "Backend process exists, restarting with updated environment..."
+    NODE_ENV=production pm2 restart "$BACKEND_PM2_NAME" --update-env
+else
+    log_info "Starting new backend process..."
+    NODE_ENV=production pm2 start server.js --name "$BACKEND_PM2_NAME" --update-env
+fi
 
 log_info "✅ Backend deployed successfully"
 
@@ -164,15 +170,26 @@ sudo cp -r build/* "$WEB_DIR/"
 sudo chown -R www-data:www-data "$WEB_DIR"
 sudo chmod -R 755 "$WEB_DIR"
 
-# Start frontend serve process (optional)
+# Start/Restart frontend serve process (optional)
 if command_exists serve; then
-    log_info "Starting frontend serve process..."
-    pm2 start serve --name "$FRONTEND_PM2_NAME" -- -s build -l 3000
+    if pm2 describe "$FRONTEND_PM2_NAME" > /dev/null 2>&1; then
+        log_info "Frontend process exists, restarting..."
+        pm2 restart "$FRONTEND_PM2_NAME" --update-env
+    else
+        log_info "Starting new frontend serve process..."
+        pm2 start serve --name "$FRONTEND_PM2_NAME" -- -s build -l 3000
+    fi
 else
     log_warn "'serve' not installed. Frontend will be served by Nginx only."
 fi
 
 log_info "✅ Frontend deployed successfully"
+
+# Clean up any orphaned PM2 processes for our app
+log_step "Cleaning up orphaned PM2 processes..."
+pm2 delete "$BACKEND_PM2_NAME" 2>/dev/null || true
+pm2 delete "$FRONTEND_PM2_NAME" 2>/dev/null || true
+pm2 flush
 
 # Save PM2 configuration
 log_step "Saving PM2 configuration..."
