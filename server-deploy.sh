@@ -11,9 +11,9 @@ echo "======================================"
 # Configuration Variables
 DOMAIN="pay4u.co.in"
 PROJECT_DIR="/var/www/pay4u"
-GIT_REPO="https://github.com/yourusername/pay4u.git"  # Replace with actual repo
+GIT_REPO="https://github.com/navalkishoricomm/pay4u.git"
 DB_NAME="pay4u"
-JWT_SECRET="your-super-secret-jwt-key-$(date +%s)"  # Generate unique secret
+JWT_SECRET="your-super-secret-jwt-key-Radhey-$(date +%s)"  # Generate unique secret
 
 # Colors for output
 RED='\033[0;31m'
@@ -123,7 +123,7 @@ setup_environment() {
     log_info "Setting up environment configuration..."
     
     # Backend environment
-    cat > .env << EOF
+    cat > backend/.env << EOF
 NODE_ENV=production
 PORT=5001
 MONGODB_URI=mongodb://localhost:27017/$DB_NAME
@@ -131,7 +131,6 @@ JWT_SECRET=$JWT_SECRET
 EOF
     
     # Frontend environment
-    mkdir -p frontend
     cat > frontend/.env.production << EOF
 REACT_APP_API_URL=https://$DOMAIN/api
 EOF
@@ -144,8 +143,15 @@ install_and_build() {
     log_info "Installing dependencies and building application..."
     
     # Backend dependencies
-    log_info "Installing backend dependencies..."
-    npm install --production
+    if [ -d "backend" ]; then
+        log_info "Installing backend dependencies..."
+        cd backend
+        npm install --production
+        cd ..
+    else
+        log_error "Backend directory not found!"
+        exit 1
+    fi
     
     # Frontend dependencies and build
     if [ -d "frontend" ]; then
@@ -154,6 +160,9 @@ install_and_build() {
         npm install
         npm run build
         cd ..
+    else
+        log_error "Frontend directory not found!"
+        exit 1
     fi
     
     log_success "Dependencies and build completed!"
@@ -187,11 +196,21 @@ setup_pm2() {
     pm2 delete pay4u-frontend 2>/dev/null || true
     
     # Start backend
-    pm2 start server.js --name pay4u-backend --env production
+    if [ -f "backend/server.js" ]; then
+        cd backend
+        pm2 start server.js --name pay4u-backend --env production
+        cd ..
+    else
+        log_error "Backend server.js not found!"
+        exit 1
+    fi
     
     # Start frontend
     if [ -d "frontend/build" ]; then
         pm2 start "serve -s frontend/build -l 3001" --name pay4u-frontend
+    else
+        log_error "Frontend build directory not found!"
+        exit 1
     fi
     
     # Save PM2 configuration
@@ -283,8 +302,12 @@ echo "🔄 Starting deployment..."
 # Pull latest code
 git pull origin main
 
-# Install dependencies
-npm install --production
+# Install backend dependencies
+if [ -d "backend" ]; then
+    cd backend
+    npm install --production
+    cd ..
+fi
 
 # Build frontend
 if [ -d "frontend" ]; then
