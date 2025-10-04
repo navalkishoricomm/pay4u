@@ -22,6 +22,7 @@ const dmtRoutes = require('./routes/dmt');
 const aepsRoutes = require('./routes/aepsRoutes');
 // const chargeSlabRoutes = require('./routes/chargeSlabRoutes');
 const auditRoutes = require('./routes/auditRoutes');
+const upiBarcodeRoutes = require('./routes/upiBarcode');
 const auditMiddleware = require('./middleware/auditMiddleware');
 
 // Initialize express app
@@ -42,6 +43,9 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 
+// Serve static files for uploaded barcodes
+app.use('/uploads', express.static('uploads'));
+
 // Add audit middleware to capture transaction data
 app.use(auditMiddleware.addStartTime);
 
@@ -61,6 +65,7 @@ app.use('/api/aeps', aepsRoutes);
 app.use('/api/admin/dmt', require('./routes/adminDMT'));
 // app.use('/api/admin/charge-slabs', chargeSlabRoutes);
 app.use('/api/admin/audit', auditRoutes);
+app.use('/api/upi-barcodes', upiBarcodeRoutes);
 
 // Default route
 app.get('/', (req, res) => {
@@ -85,7 +90,7 @@ const connectDB = async () => {
   try {
     console.log('Attempting to connect to MongoDB...');
     
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/pay4u', {
+    await mongoose.connect(process.env.DATABASE_URI || 'mongodb://localhost:27017/pay4u', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s

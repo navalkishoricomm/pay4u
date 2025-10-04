@@ -31,10 +31,11 @@ exports.getMyWallet = async (req, res) => {
   }
 };
 
-// Top up wallet (placeholder for payment gateway integration)
+// Top up wallet with UPI barcode upload
 exports.topUpWallet = async (req, res) => {
   try {
     const { amount, paymentMethod } = req.body;
+    const barcodeFile = req.file; // Multer file upload
 
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -43,7 +44,23 @@ exports.topUpWallet = async (req, res) => {
       });
     }
 
-    console.log(`Processing wallet top-up for user: ${req.user.id}, amount: ${amount}`);
+    // Validate UPI payment method
+    if (paymentMethod !== 'upi') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Only UPI payments are supported',
+      });
+    }
+
+    // Validate barcode upload for UPI
+    if (!barcodeFile) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'UPI barcode/screenshot is required',
+      });
+    }
+
+    console.log(`Processing UPI wallet top-up for user: ${req.user.id}, amount: ${amount}`);
     
     // Find the user's wallet
     const wallet = await Wallet.findOne({ user: req.user.id });
@@ -56,7 +73,7 @@ exports.topUpWallet = async (req, res) => {
     }
     
     // Generate unique transaction ID
-    const transactionId = `TOPUP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const transactionId = `UPI-TOPUP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // Create a transaction record (awaiting approval for top-ups)
     const transaction = await Transaction.create({
@@ -66,27 +83,32 @@ exports.topUpWallet = async (req, res) => {
       amount: parseFloat(amount),
       type: 'topup',
       status: 'awaiting_approval',
-      description: req.body.description || 'Wallet top-up',
+      description: req.body.description || 'UPI Wallet top-up',
       metadata: {
-        paymentMethod: paymentMethod || 'card',
-        // In a real implementation, this would include payment gateway details
+        paymentMethod: 'upi',
+        barcodeFileName: barcodeFile.filename,
+        barcodePath: barcodeFile.path,
+        barcodeOriginalName: barcodeFile.originalname,
+        barcodeSize: barcodeFile.size,
+        uploadedAt: new Date()
       },
       reference: transactionId,
     });
 
-    console.log(`Top-up of ${amount} submitted for approval`);
+    console.log(`UPI top-up of ${amount} with barcode submitted for approval`);
 
     // Since the transaction is awaiting approval, don't update the balance yet
     res.status(200).json({
       status: 'success',
-      message: 'Your top-up request has been submitted for approval',
+      message: 'Your UPI top-up request with barcode has been submitted for approval',
       data: {
         transaction,
-        currentBalance: wallet.balance, // Show the current balance without the pending amount
+        currentBalance: wallet.balance,
+        barcodeUploaded: true
       },
     });
   } catch (error) {
-    console.error('Top-up request failed:', error.message);
+    console.error('UPI top-up request failed:', error.message);
     
     res.status(500).json({
       status: 'error',
