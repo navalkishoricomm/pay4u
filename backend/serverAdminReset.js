@@ -24,7 +24,7 @@ const mongoose = require('mongoose');
       // Create new admin user
       const adminData = {
         name: 'Admin User',
-        email: 'admin@pay4u.co.in',
+        email: 'admin@pay4u.com',
         password: 'admin123456',
         phone: '9999999999',
         role: 'admin'

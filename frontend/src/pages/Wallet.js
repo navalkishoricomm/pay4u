@@ -40,7 +40,7 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
 
   const fetchWalletData = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/wallet/my-wallet');
+      const response = await axios.get('/wallet/my-wallet');
       setWalletData(response.data.data.wallet);
     } catch (error) {
       console.error('Error fetching wallet data:', error);
@@ -52,7 +52,7 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
 
   const fetchPendingTransactions = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/transactions', {
+      const response = await axios.get('/transactions', {
         params: { status: 'awaiting_approval', type: 'topup' }
       });
       setPendingTransactions(response.data.data.transactions || []);
@@ -64,11 +64,7 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
   const fetchUpiBarcodes = async () => {
     try {
       console.log('Attempting to fetch UPI barcodes...');
-      const response = await axios.get('http://localhost:5001/api/upi-barcodes/active', {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axios.get('/upi-barcodes/active');
       console.log('UPI Barcodes Response:', response.data);
       const barcodes = response.data.data?.barcodes || response.data.data || [];
       console.log('Parsed barcodes:', barcodes);
@@ -128,7 +124,7 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
         formData.append('location', JSON.stringify(locationInfo));
       }
       
-      const response = await axios.post('http://localhost:5001/api/wallet/topup', formData, {
+      const response = await axios.post('/wallet/topup', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
