@@ -19,14 +19,29 @@ export const SocketProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const { currentUser, isAuthenticated } = useAuth();
 
-  const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5001';
+  // Production-ready socket URL configuration
+  const getSocketURL = () => {
+    if (process.env.NODE_ENV === 'production') {
+      return 'https://pay4u.co.in';
+    }
+    return process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5001';
+  };
+
+  const SOCKET_URL = getSocketURL();
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
-      // Initialize socket connection
+      // Initialize socket connection with production-ready configuration
       const newSocket = io(SOCKET_URL, {
         transports: ['websocket', 'polling'],
+        upgrade: true,
+        rememberUpgrade: true,
         timeout: 20000,
+        forceNew: false,
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        maxReconnectionAttempts: 5
       });
 
       newSocket.on('connect', () => {

@@ -137,6 +137,19 @@ io.on('connection', (socket) => {
 
 // Start server
 const PORT = process.env.PORT || 5001;
+
+// Test endpoint for barcode images
+app.get('/test-barcode/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'uploads', 'admin-barcodes', filename);
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).json({ error: 'Barcode image not found', path: filePath });
+    }
+});
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log('Socket.IO server initialized');

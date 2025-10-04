@@ -80,7 +80,7 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
         setSelectedBarcode(barcodes[0]);
         console.log('No default found, selected first barcode:', barcodes[0]);
       }
-      alert(`Barcodes loaded: ${barcodes.length}, Selected: ${selectedBarcode ? 'YES' : 'NO'}`);
+     // alert(`Barcodes loaded: ${barcodes.length}, Selected: ${selectedBarcode ? 'YES' : 'NO'}`);
 
     } catch (err) {
       console.error('Error fetching UPI barcodes:', err);
