@@ -337,6 +337,7 @@ server {
     }
 }
 EOF
+    fi
     
     # Enable site
     sudo ln -sf /etc/nginx/sites-available/pay4u /etc/nginx/sites-enabled/
