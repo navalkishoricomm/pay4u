@@ -242,8 +242,70 @@ setup_pm2() {
 setup_nginx() {
     log_info "Configuring Nginx..."
     
-    # Create Nginx configuration
-    sudo tee /etc/nginx/sites-available/pay4u << EOF
+    # Backup existing SSL configuration if it exists
+    if [ -f "/etc/nginx/sites-available/pay4u" ]; then
+        log_info "Backing up existing Nginx configuration..."
+        sudo cp /etc/nginx/sites-available/pay4u /etc/nginx/sites-available/pay4u.backup.$(date +%s)
+    fi
+    
+    # Check if SSL certificates exist
+    SSL_CERT_EXISTS=false
+    if [ -d "/etc/letsencrypt/live/$DOMAIN" ]; then
+        log_info "SSL certificates found for $DOMAIN"
+        SSL_CERT_EXISTS=true
+    fi
+    
+    # Create Nginx configuration based on SSL availability
+    if [ "$SSL_CERT_EXISTS" = true ]; then
+        log_info "Creating SSL-enabled Nginx configuration..."
+        sudo tee /etc/nginx/sites-available/pay4u << EOF
+server {
+    listen 80;
+    server_name $DOMAIN www.$DOMAIN;
+    return 301 https://\$server_name\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name $DOMAIN www.$DOMAIN;
+
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+
+    # Frontend (React build)
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+
+    # Backend API
+    location /api {
+        proxy_pass http://localhost:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOF
+    else
+        log_info "Creating HTTP-only Nginx configuration..."
+        sudo tee /etc/nginx/sites-available/pay4u << EOF
 server {
     listen 80;
     server_name $DOMAIN www.$DOMAIN;
@@ -315,6 +377,12 @@ setup_management_scripts() {
 #!/bin/bash
 echo "🔄 Starting deployment..."
 
+# Backup SSL configuration if it exists
+if [ -f "/etc/nginx/sites-available/pay4u" ]; then
+    echo "📋 Backing up SSL configuration..."
+    sudo cp /etc/nginx/sites-available/pay4u /tmp/nginx-ssl-backup-$(date +%s)
+fi
+
 # Pull latest code
 git pull origin main
 
@@ -342,12 +410,63 @@ if [ -f "backend/serverAdminReset.js" ]; then
     echo "Admin credentials: admin@pay4u.co.in / admin123456"
 fi
 
+# Restore SSL configuration if certificates exist
+if [ -d "/etc/letsencrypt/live/pay4u.co.in" ]; then
+    echo "🔒 Restoring SSL configuration..."
+    sudo tee /etc/nginx/sites-available/pay4u << 'SSLEOF'
+server {
+    listen 80;
+    server_name pay4u.co.in www.pay4u.co.in;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name pay4u.co.in www.pay4u.co.in;
+
+    ssl_certificate /etc/letsencrypt/live/pay4u.co.in/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pay4u.co.in/privkey.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+
+    # Frontend (React build)
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Backend API
+    location /api {
+        proxy_pass http://localhost:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+SSLEOF
+    echo "✅ SSL configuration restored"
+fi
+
 # Restart services
 pm2 restart pay4u-backend
 pm2 restart pay4u-frontend
 
-# Reload Nginx
-sudo systemctl reload nginx
+# Test and reload Nginx
+sudo nginx -t && sudo systemctl reload nginx
 
 echo "✅ Deployment completed!"
 EOF
