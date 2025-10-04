@@ -49,6 +49,7 @@ import AdminNotifications from './pages/AdminNotifications';
 import UserNotifications from './components/UserNotifications';
 import ChargeSlabManagement from './components/admin/ChargeSlabManagement';
 import AuditDashboard from './components/admin/AuditDashboard';
+import UPIBarcodeManager from './components/admin/UPIBarcodeManager';
 
 // Context
 import { useAuth } from './context/AuthContext';
@@ -329,6 +330,14 @@ function App() {
               element={
                 <AdminRoute>
                   <AuditDashboard />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/upi-barcodes"
+              element={
+                <AdminRoute>
+                  <UPIBarcodeManager />
                 </AdminRoute>
               }
             />

@@ -12,6 +12,11 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [selectedAmount, setSelectedAmount] = useState('');
+  const [upiBarcodes, setUpiBarcodes] = useState([]);
+  const [selectedBarcode, setSelectedBarcode] = useState(null);
+  const [showBarcodes, setShowBarcodes] = useState(false);
+  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const { success, info, error: showError } = useNotification();
   const { getLocationForAPI } = useLocation();
 
@@ -21,11 +26,21 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
   useEffect(() => {
     fetchWalletData();
     fetchPendingTransactions();
+    fetchUpiBarcodes();
   }, []);
+  
+  useEffect(() => {
+    // Cleanup function to revoke object URLs
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const fetchWalletData = async () => {
     try {
-      const response = await axios.get('/wallet/my-wallet');
+      const response = await axios.get('http://localhost:5001/api/wallet/my-wallet');
       setWalletData(response.data.data.wallet);
     } catch (error) {
       console.error('Error fetching wallet data:', error);
@@ -37,12 +52,43 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
 
   const fetchPendingTransactions = async () => {
     try {
-      const response = await axios.get('/transactions', {
+      const response = await axios.get('http://localhost:5001/api/transactions', {
         params: { status: 'awaiting_approval', type: 'topup' }
       });
       setPendingTransactions(response.data.data.transactions || []);
     } catch (err) {
       console.error('Error fetching pending transactions:', err);
+    }
+  };
+
+  const fetchUpiBarcodes = async () => {
+    try {
+      console.log('Attempting to fetch UPI barcodes...');
+      const response = await axios.get('http://localhost:5001/api/upi-barcodes/active', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('UPI Barcodes Response:', response.data);
+      const barcodes = response.data.data?.barcodes || response.data.data || [];
+      console.log('Parsed barcodes:', barcodes);
+      setUpiBarcodes(barcodes);
+      // Set default barcode if available
+      const defaultBarcode = barcodes.find(barcode => barcode.isDefault);
+      console.log('Default barcode found:', defaultBarcode);
+      if (defaultBarcode) {
+        setSelectedBarcode(defaultBarcode);
+        console.log('Selected barcode set to:', defaultBarcode);
+      } else if (barcodes.length > 0) {
+        // If no default, select the first available barcode
+        setSelectedBarcode(barcodes[0]);
+        console.log('No default found, selected first barcode:', barcodes[0]);
+      }
+      alert(`Barcodes loaded: ${barcodes.length}, Selected: ${selectedBarcode ? 'YES' : 'NO'}`);
+
+    } catch (err) {
+      console.error('Error fetching UPI barcodes:', err);
+      alert(`Error fetching barcodes: ${err.message}`);
     }
   };
 
@@ -57,20 +103,36 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
     setIsProcessing(true);
     
     try {
-      // In a real app, this would integrate with a payment gateway
-      // For now, we'll just call our API endpoint directly
-      const requestData = {
-        amount: parseFloat(topupAmount),
-        paymentMethod: 'card', // Placeholder
-      };
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('amount', parseFloat(topupAmount));
+      formData.append('paymentMethod', 'upi');
+      
+      // Add UPI barcode information
+      if (selectedBarcode) {
+        formData.append('upiBarcode', JSON.stringify({
+          id: selectedBarcode._id,
+          name: selectedBarcode.name,
+          upiId: selectedBarcode.upiId
+        }));
+      }
+      
+      // Add payment screenshot if uploaded
+      if (paymentScreenshot) {
+        formData.append('paymentScreenshot', paymentScreenshot);
+      }
       
       // Add location data if available
       const locationInfo = getLocationForAPI();
       if (locationInfo) {
-        requestData.location = locationInfo;
+        formData.append('location', JSON.stringify(locationInfo));
       }
       
-      const response = await axios.post('/wallet/topup', requestData);
+      const response = await axios.post('http://localhost:5001/api/wallet/topup', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       
       // Update pending transactions
       fetchPendingTransactions();
@@ -78,6 +140,14 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
       // Show notification
       info(`Your request to add ₹${topupAmount} has been submitted for approval`);
       setTopupAmount('');
+      setSelectedAmount('');
+      
+      // Reset payment screenshot
+      if (paymentScreenshot) {
+        setPaymentScreenshot(null);
+        setPreviewUrl(null);
+        document.getElementById('paymentScreenshot').value = '';
+      }
     } catch (error) {
       console.error('Error topping up wallet:', error);
       showError('Failed to top up wallet');
@@ -178,52 +248,183 @@ const Wallet = ({ locationData, hasLocationPermission, isLocationAvailable }) =>
             />
           </div>
           
-          {/* Payment methods - mobile optimized */}
+          {/* Payment methods - UPI only with barcode upload */}
           <div className="form-group">
             <label style={{fontSize: '1rem', fontWeight: '600', marginBottom: '0.75rem', display: 'block'}}>Payment Method</label>
             <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
               <div className="payment-method active touch-target" style={{display: 'flex', alignItems: 'center', padding: '1rem', border: '2px solid var(--primary-color)', borderRadius: 'var(--border-radius)', background: 'rgba(76, 175, 80, 0.1)'}}>
                 <input 
                   type="radio" 
-                  id="card" 
-                  name="paymentMethod" 
-                  value="card" 
-                  defaultChecked
-                  style={{marginRight: '0.75rem', transform: 'scale(1.2)'}}
-                />
-                <i className="fas fa-credit-card" style={{fontSize: '1.25rem', marginRight: '0.75rem', color: 'var(--primary-color)'}}></i>
-                <label htmlFor="card" style={{fontSize: '1rem', fontWeight: '500', cursor: 'pointer', flex: 1}}>Credit/Debit Card</label>
-              </div>
-              
-              <div className="payment-method disabled touch-target" style={{display: 'flex', alignItems: 'center', padding: '1rem', border: '2px solid var(--gray-color)', borderRadius: 'var(--border-radius)', opacity: 0.6}}>
-                <input 
-                  type="radio" 
                   id="upi" 
                   name="paymentMethod" 
                   value="upi" 
-                  disabled
+                  defaultChecked
                   style={{marginRight: '0.75rem', transform: 'scale(1.2)'}}
                 />
-                <i className="fab fa-google-pay" style={{fontSize: '1.25rem', marginRight: '0.75rem', color: 'var(--gray-color)'}}></i>
-                <label htmlFor="upi" style={{fontSize: '1rem', fontWeight: '500', cursor: 'not-allowed', flex: 1}}>UPI (Coming Soon)</label>
-              </div>
-              
-              <div className="payment-method disabled touch-target" style={{display: 'flex', alignItems: 'center', padding: '1rem', border: '2px solid var(--gray-color)', borderRadius: 'var(--border-radius)', opacity: 0.6}}>
-                <input 
-                  type="radio" 
-                  id="netbanking" 
-                  name="paymentMethod" 
-                  value="netbanking" 
-                  disabled
-                  style={{marginRight: '0.75rem', transform: 'scale(1.2)'}}
-                />
-                <i className="fas fa-university" style={{fontSize: '1.25rem', marginRight: '0.75rem', color: 'var(--gray-color)'}}></i>
-                <label htmlFor="netbanking" style={{fontSize: '1rem', fontWeight: '500', cursor: 'not-allowed', flex: 1}}>Net Banking (Coming Soon)</label>
+                <i className="fab fa-google-pay" style={{fontSize: '1.25rem', marginRight: '0.75rem', color: 'var(--primary-color)'}}></i>
+                <label htmlFor="upi" style={{fontSize: '1rem', fontWeight: '500', cursor: 'pointer', flex: 1}}>UPI Payment</label>
               </div>
             </div>
           </div>
           
-          {/* Submit button */}
+          {/* UPI Barcode Display */}
+          <div className="form-group">
+            <label style={{fontSize: '1rem', fontWeight: '600', marginBottom: '0.75rem', display: 'block'}}>UPI Payment QR Code</label>
+
+            
+            <div style={{padding: '10px', background: '#f0f0f0', margin: '10px 0', fontSize: '12px'}}>
+              Debug Info: selectedBarcode = {selectedBarcode ? 'EXISTS' : 'NULL'}, upiBarcodes length = {upiBarcodes.length}
+              {selectedBarcode && <div>Barcode URL: {selectedBarcode.barcodeUrl}</div>}
+            </div>
+            {selectedBarcode ? (
+              <div style={{border: '2px solid var(--primary-color)', borderRadius: 'var(--border-radius)', padding: '1.5rem', textAlign: 'center', background: 'rgba(76, 175, 80, 0.05)'}}>
+                <div style={{marginBottom: '1rem'}}>
+                  <h3 style={{margin: '0 0 0.5rem 0', fontSize: '1.125rem', fontWeight: '600'}}>{selectedBarcode.name}</h3>
+                  <p style={{margin: '0 0 1rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)'}}>UPI ID: {selectedBarcode.upiId}</p>
+                </div>
+                
+                <div style={{display: 'flex', justifyContent: 'center', marginBottom: '1rem'}}>
+                  <img 
+                    src={selectedBarcode.barcodeUrl}
+                    alt={`UPI QR Code for ${selectedBarcode.name}`}
+                    style={{maxWidth: '200px', maxHeight: '200px', border: '1px solid #ddd', borderRadius: '8px'}}
+                    onError={(e) => {
+                      console.error('Failed to load QR code image:', selectedBarcode.barcodeUrl);
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'block';
+                    }}
+                  />
+                  <div style={{display: 'none', padding: '2rem', background: '#f8f9fa', borderRadius: '8px', color: '#666'}}>
+                    <i className="fas fa-exclamation-triangle" style={{fontSize: '2rem', marginBottom: '0.5rem'}}></i>
+                    <p>QR Code not available</p>
+                  </div>
+                </div>
+                
+                <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.4'}}>
+                   <p style={{margin: '0 0 0.5rem 0'}}><i className="fas fa-info-circle" style={{marginRight: '0.5rem'}}></i>Scan this QR code with any UPI app to pay ₹{topupAmount || '0'}</p>
+                   <p style={{margin: 0}}>After payment, upload the screenshot below for faster processing</p>
+                 </div>
+                
+                {upiBarcodes.length > 1 && (
+                  <button 
+                    type="button"
+                    className="btn btn-outline-primary"
+                    style={{marginTop: '1rem', fontSize: '0.875rem'}}
+                    onClick={() => setShowBarcodes(!showBarcodes)}
+                  >
+                    <i className={`fas ${showBarcodes ? 'fa-eye-slash' : 'fa-eye'}`} style={{marginRight: '0.5rem'}}></i>
+                    {showBarcodes ? 'Hide' : 'Show'} Other Payment Options
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div style={{border: '2px dashed #ccc', borderRadius: 'var(--border-radius)', padding: '1.5rem', textAlign: 'center', background: '#f8f9fa'}}>
+                <i className="fas fa-qrcode" style={{fontSize: '2rem', color: '#ccc', marginBottom: '0.5rem'}}></i>
+                <p style={{margin: '0.5rem 0', fontSize: '1rem', color: '#666'}}>No UPI QR codes available</p>
+                <p style={{margin: 0, fontSize: '0.875rem', color: '#999'}}>Please contact support to set up payment methods</p>
+              </div>
+            )}
+            
+            {/* Additional barcode options */}
+            {showBarcodes && upiBarcodes.length > 1 && (
+              <div style={{marginTop: '1rem', padding: '1rem', background: '#f8f9fa', borderRadius: 'var(--border-radius)'}}>
+                <h4 style={{margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: '600'}}>Choose Payment Method:</h4>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem'}}>
+                  {upiBarcodes.map(barcode => (
+                    <div 
+                      key={barcode._id}
+                      className={`payment-option ${selectedBarcode?._id === barcode._id ? 'selected' : ''}`}
+                      style={{
+                        padding: '1rem',
+                        border: selectedBarcode?._id === barcode._id ? '2px solid var(--primary-color)' : '1px solid #ddd',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        background: selectedBarcode?._id === barcode._id ? 'rgba(76, 175, 80, 0.1)' : 'white'
+                      }}
+                      onClick={() => setSelectedBarcode(barcode)}
+                    >
+                      <h5 style={{margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: '600'}}>{barcode.name}</h5>
+                      <p style={{margin: '0', fontSize: '0.75rem', color: 'var(--text-secondary)'}}>{barcode.upiId}</p>
+                      {barcode.isDefault && (
+                        <span style={{display: 'inline-block', marginTop: '0.5rem', padding: '0.25rem 0.5rem', background: 'var(--primary-color)', color: 'white', borderRadius: '12px', fontSize: '0.625rem'}}>Default</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+           </div>
+           
+           {/* Payment Screenshot Upload */}
+           <div className="form-group" style={{marginTop: '1.5rem'}}>
+             <label style={{fontSize: '1rem', fontWeight: '600', marginBottom: '0.75rem', display: 'block'}}>
+               <i className="fas fa-camera" style={{marginRight: '0.5rem', color: 'var(--primary-color)'}}></i>
+               Upload Payment Screenshot (Optional)
+             </label>
+             
+             <div style={{border: '2px dashed var(--primary-color)', borderRadius: 'var(--border-radius)', padding: '1.5rem', textAlign: 'center', background: 'rgba(76, 175, 80, 0.05)'}}>
+               <input 
+                 type="file" 
+                 id="paymentScreenshot" 
+                 accept="image/*" 
+                 style={{display: 'none'}}
+                 onChange={(e) => {
+                   const file = e.target.files[0];
+                   if (file) {
+                     setPaymentScreenshot(file);
+                     const url = URL.createObjectURL(file);
+                     setPreviewUrl(url);
+                   }
+                 }}
+               />
+               
+               {previewUrl ? (
+                 <div>
+                   <img 
+                     src={previewUrl} 
+                     alt="Payment Screenshot Preview" 
+                     style={{maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', marginBottom: '1rem'}}
+                   />
+                   <div style={{display: 'flex', justifyContent: 'center', gap: '0.5rem'}}>
+                     <label htmlFor="paymentScreenshot" className="btn btn-outline-primary" style={{cursor: 'pointer', fontSize: '0.875rem'}}>
+                       <i className="fas fa-edit" style={{marginRight: '0.5rem'}}></i>
+                       Change Image
+                     </label>
+                     <button 
+                       type="button" 
+                       className="btn btn-outline-danger" 
+                       style={{fontSize: '0.875rem'}}
+                       onClick={() => {
+                         setPaymentScreenshot(null);
+                         setPreviewUrl(null);
+                         document.getElementById('paymentScreenshot').value = '';
+                       }}
+                     >
+                       <i className="fas fa-trash" style={{marginRight: '0.5rem'}}></i>
+                       Remove
+                     </button>
+                   </div>
+                   <p style={{margin: '0.5rem 0 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)'}}>
+                     File: {paymentScreenshot?.name}
+                   </p>
+                 </div>
+               ) : (
+                 <label htmlFor="paymentScreenshot" style={{cursor: 'pointer', display: 'block'}}>
+                   <i className="fas fa-cloud-upload-alt" style={{fontSize: '2rem', color: 'var(--primary-color)', marginBottom: '0.5rem'}}></i>
+                   <p style={{margin: '0.5rem 0', fontSize: '1rem', fontWeight: '500'}}>Click to upload payment screenshot</p>
+                   <p style={{margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)'}}>Upload screenshot of your UPI payment for faster processing</p>
+                 </label>
+               )}
+             </div>
+             
+             <div style={{marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center'}}>
+               <i className="fas fa-info-circle" style={{marginRight: '0.5rem'}}></i>
+               Supported formats: JPG, PNG, GIF (Max 5MB)
+             </div>
+           </div>
+           
+           {/* Submit button */}
           <button 
             type="submit" 
             className="btn btn-primary btn-block touch-target"

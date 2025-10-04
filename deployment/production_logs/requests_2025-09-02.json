@@ -1,0 +1,81 @@
+[
+  {
+    "requestId": "REQ_1756839416518_9icepr8kc",
+    "timestamp": "2025-09-02T18:56:56.518Z",
+    "type": "REQUEST",
+    "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/dmt/banklist",
+    "method": "GET",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "X-Partner-Id": "PS003214",
+      "X-API-Version": "v1",
+      "PARTNERID": "PS0012468",
+      "AES_KEY": "060e37d1XXXXXXXX",
+      "AES_IV": "788a4b95XXXXXXXX",
+      "Authorization": "Bearer eyJhbGciOiJIU..."
+    },
+    "body": {},
+    "additionalInfo": {
+      "endpoint": "/dmt/banklist",
+      "originalData": {},
+      "encrypted": false,
+      "retryCount": 0,
+      "apiProvider": "paysprint"
+    }
+  },
+  {
+    "requestId": "REQ_1756839417082_qebpon9gb",
+    "timestamp": "2025-09-02T18:56:57.082Z",
+    "type": "REQUEST",
+    "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/balance",
+    "method": "GET",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "X-Partner-Id": "PS003214",
+      "X-API-Version": "v1",
+      "PARTNERID": "PS0012468",
+      "AES_KEY": "060e37d1XXXXXXXX",
+      "AES_IV": "788a4b95XXXXXXXX",
+      "Authorization": "Bearer eyJhbGciOiJIU..."
+    },
+    "body": {},
+    "additionalInfo": {
+      "endpoint": "/balance",
+      "originalData": {},
+      "encrypted": false,
+      "retryCount": 0,
+      "apiProvider": "paysprint"
+    }
+  },
+  {
+    "requestId": "REQ_1756839417201_y0quknocu",
+    "timestamp": "2025-09-02T18:56:57.201Z",
+    "type": "REQUEST",
+    "endpoint": "https://sit.paysprint.in/service-api/api/v1/service/dmt/remitter/queryremitter",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "X-Partner-Id": "PS003214",
+      "X-API-Version": "v1",
+      "PARTNERID": "PS0012468",
+      "AES_KEY": "060e37d1XXXXXXXX",
+      "AES_IV": "788a4b95XXXXXXXX",
+      "Authorization": "Bearer eyJhbGciOiJIU..."
+    },
+    "body": {
+      "mobile": "9999999999"
+    },
+    "additionalInfo": {
+      "endpoint": "/dmt/remitter/queryremitter",
+      "originalData": {
+        "mobile": "9999999999"
+      },
+      "encrypted": true,
+      "retryCount": 0,
+      "apiProvider": "paysprint"
+    }
+  }
+]

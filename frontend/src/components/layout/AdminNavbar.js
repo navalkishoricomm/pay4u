@@ -76,6 +76,11 @@ const AdminNavbar = () => {
             <i className="fas fa-shield-alt"></i> Transaction Audit
           </Link>
         </li>
+        <li className={isActive('/admin/upi-barcodes')}>
+          <Link to="/admin/upi-barcodes">
+            <i className="fas fa-qrcode"></i> UPI Barcode Management
+          </Link>
+        </li>
         <li>
           <Link to="/dashboard">
             <i className="fas fa-user"></i> User Dashboard

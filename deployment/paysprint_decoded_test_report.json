@@ -1,0 +1,91 @@
+{
+  "timestamp": "2025-09-03T04:04:23.885Z",
+  "baseURL": "https://api.paysprint.in/api/v1/service",
+  "testType": "DECODED_CREDENTIALS_TEST",
+  "originalCredentials": {
+    "JWT_KEY": "UFMwMDMyMTRmZjc5OTQ5...",
+    "AUTHORISED_KEY": "MTMyZDg1Nzc5MTBiY2Q1..."
+  },
+  "decodedCredentials": {
+    "JWT_KEY": "PS003214ff7994907c1ce05963cbb4983ddeb68b",
+    "AUTHORISED_KEY": "132d8577910bcd5afee8f26c0b239263"
+  },
+  "results": {
+    "/balance/balance/mainbalance": {
+      "POST - Decoded Direct": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "testConfig": "POST - Decoded Direct"
+      },
+      "POST - Decoded Standard Format": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "testConfig": "POST - Decoded Standard Format"
+      },
+      "Headers - Decoded JWT Bearer": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "testConfig": "Headers - Decoded JWT Bearer"
+      },
+      "Headers - Original + Decoded Mix": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "testConfig": "Headers - Original + Decoded Mix"
+      },
+      "POST - Mixed Original/Decoded": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "testConfig": "POST - Mixed Original/Decoded"
+      },
+      "POST - Auth Object Decoded": {
+        "success": false,
+        "status": 401,
+        "data": {
+          "status": false,
+          "response_code": 5,
+          "message": "Authentication failed"
+        },
+        "error": "Request failed with status code 401",
+        "testConfig": "POST - Auth Object Decoded"
+      }
+    }
+  },
+  "summary": {
+    "totalTests": 6,
+    "successful": 0,
+    "unauthorized": 6,
+    "notFound": 0,
+    "otherErrors": 0,
+    "workingConfigurations": []
+  }
+}
