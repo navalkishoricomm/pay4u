@@ -168,6 +168,22 @@ install_and_build() {
     log_success "Dependencies and build completed!"
 }
 
+# Step 4.5: Setup Admin User
+setup_admin_user() {
+    log_info "Setting up admin user..."
+    
+    if [ -f "backend/serverAdminReset.js" ]; then
+        cd backend
+        log_info "Running admin user setup script..."
+        node serverAdminReset.js
+        cd ..
+        log_success "Admin user setup completed!"
+        log_info "Admin credentials: admin@pay4u.co.in / admin123456"
+    else
+        log_warning "serverAdminReset.js not found, skipping admin setup"
+    fi
+}
+
 # Step 5: Setup MongoDB
 setup_mongodb() {
     log_info "Setting up MongoDB..."
@@ -317,6 +333,15 @@ if [ -d "frontend" ]; then
     cd ..
 fi
 
+# Setup/Reset admin user if script exists
+if [ -f "backend/serverAdminReset.js" ]; then
+    echo "🔑 Setting up admin user..."
+    cd backend
+    node serverAdminReset.js
+    cd ..
+    echo "Admin credentials: admin@pay4u.co.in / admin123456"
+fi
+
 # Restart services
 pm2 restart pay4u-backend
 pm2 restart pay4u-frontend
@@ -400,6 +425,7 @@ main() {
     setup_environment
     install_and_build
     setup_mongodb
+    setup_admin_user
     setup_pm2
     setup_nginx
     setup_management_scripts
