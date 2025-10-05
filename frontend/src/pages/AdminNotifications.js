@@ -44,7 +44,7 @@ const AdminNotifications = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/notifications/admin/all', {
+      const response = await axios.get('/notifications/admin/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(response.data.data.notifications);
@@ -58,7 +58,7 @@ const AdminNotifications = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/notifications/admin/users?search=${userSearch}`, {
+      const response = await axios.get(`/notifications/admin/users?search=${userSearch}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(response.data.data.users);
@@ -71,7 +71,7 @@ const AdminNotifications = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/notifications/admin/stats', {
+      const response = await axios.get('/notifications/admin/stats', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(response.data.data);
@@ -113,8 +113,8 @@ const AdminNotifications = () => {
       };
       
       const endpoint = formData.sendToAll || selectedUsers.length > 1 
-        ? '/api/notifications/admin/bulk'
-        : '/api/notifications/admin/create';
+        ? '/notifications/admin/bulk'
+        : '/notifications/admin/create';
       
       if (!formData.sendToAll && selectedUsers.length === 1) {
         payload.userId = selectedUsers[0]._id;
@@ -153,7 +153,7 @@ const AdminNotifications = () => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/notifications/admin/${id}`, {
+      await axios.delete(`/notifications/admin/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(prev => prev.filter(n => n._id !== id));
