@@ -53,6 +53,19 @@ check_app_exists() {
     fi
 }
 
+ensure_ownership() {
+    log_info "Ensuring application files are owned by user '$APP_USER'..."
+    # Ensure core directories exist
+    mkdir -p "$APP_DIR/logs" "$APP_PATH" "$APP_DIR/.pm2"
+    
+    # Fix ownership to prevent npm EACCES errors
+    chown -R $APP_USER:$APP_USER "$APP_PATH" || log_warning "Failed to chown $APP_PATH"
+    chown -R $APP_USER:$APP_USER "$APP_DIR/logs" || log_warning "Failed to chown $APP_DIR/logs"
+    chown -R $APP_USER:$APP_USER "$APP_DIR/.pm2" || log_warning "Failed to chown $APP_DIR/.pm2"
+    
+    log_success "Ownership corrected for $APP_PATH, logs, and PM2 home"
+}
+
 create_backup() {
     log_info "Creating backup of current application..."
     mkdir -p "$BACKUP_DIR"
@@ -228,6 +241,7 @@ main() {
     if ! (
         stop_services &&
         update_code &&
+        ensure_ownership &&
         update_backend &&
         update_frontend &&
         restart_services &&
