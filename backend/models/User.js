@@ -37,6 +37,13 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
+    featurePermissions: {
+      showRecharges: { type: Boolean, default: false },
+      showBillPayments: { type: Boolean, default: false },
+      showMoneyTransfer: { type: Boolean, default: false },
+      showAEPS: { type: Boolean, default: false },
+      showVouchers: { type: Boolean, default: true }
+    },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,

@@ -47,13 +47,20 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // Create new user
+    // Create new user with vouchers-only default feature permissions
     const newUser = await User.create({
       name,
       email,
       password,
       phone,
-      role: 'user'
+      role: 'user',
+      featurePermissions: {
+        showRecharges: false,
+        showBillPayments: false,
+        showMoneyTransfer: false,
+        showAEPS: false,
+        showVouchers: true
+      }
     });
 
     // Create wallet for the new user
@@ -90,29 +97,12 @@ exports.login = async (req, res) => {
     // Check if user exists and password is correct
     const user = await User.findOne({ email }).select('+password');
     
-    console.log('Login attempt for email:', email);
-    console.log('User found:', !!user);
-    
-    if (!user) {
-      console.log('User not found');
+    if (!user || !(await user.correctPassword(password, user.password))) {
       return res.status(401).json({
         status: 'fail',
         message: 'Incorrect email or password',
       });
     }
-    
-    const passwordValid = await user.correctPassword(password, user.password);
-    console.log('Password valid:', passwordValid);
-    
-    if (!passwordValid) {
-      console.log('Invalid password');
-      return res.status(401).json({
-        status: 'fail',
-        message: 'Incorrect email or password',
-      });
-    }
-
-    console.log('User authenticated successfully');
 
     // If everything is ok, send token to client
     createSendToken(user, 200, res);
@@ -294,6 +284,71 @@ exports.getAllUsers = async (req, res) => {
   } catch (error) {
     res.status(400).json({
       status: 'fail',
+      message: error.message
+    });
+  }
+};
+
+// Admin: update per-user feature permissions
+exports.updateUserFeaturePermissions = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'Only admins can update user feature permissions'
+      });
+    }
+
+    const { id } = req.params;
+    const allowedKeys = ['showRecharges', 'showBillPayments', 'showMoneyTransfer', 'showAEPS', 'showVouchers'];
+    const updates = req.body || {};
+
+    // Normalize boolean-like values to actual booleans
+    const coerceBool = (val) => {
+      if (val === undefined || val === null) return val;
+      if (typeof val === 'string') {
+        const s = val.trim().toLowerCase();
+        if (s === 'true') return true;
+        if (s === 'false') return false;
+      }
+      return !!val;
+    };
+
+    // Validate keys
+    const invalid = Object.keys(updates).filter(k => !allowedKeys.includes(k));
+    if (invalid.length > 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: `Invalid permission keys: ${invalid.join(', ')}`
+      });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'User not found'
+      });
+    }
+
+    const nextPerms = { ...(user.featurePermissions || {}) };
+    for (const key of allowedKeys) {
+      if (updates.hasOwnProperty(key)) {
+        nextPerms[key] = coerceBool(updates[key]);
+      }
+    }
+    user.featurePermissions = nextPerms;
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Feature permissions updated successfully',
+      data: { user }
+    });
+  } catch (error) {
+    console.error('Error updating feature permissions:', error);
+    res.status(500).json({
+      status: 'error',
       message: error.message
     });
   }

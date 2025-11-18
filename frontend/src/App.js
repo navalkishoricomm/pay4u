@@ -56,6 +56,11 @@ import { useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { SocketProvider } from './context/SocketContext';
 import { LocationProvider } from './contexts/LocationContext';
+import {
+  SHOW_RECHARGES,
+  SHOW_BILL_PAYMENTS,
+  SHOW_MONEY_TRANSFER
+} from './config/featureFlags';
 
 // Debug Components
 import AmountInputTest from './debug/AmountInputTest';
@@ -64,7 +69,12 @@ import TestRechargeAPI from './debug/TestRechargeAPI';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  
+  // Avoid redirecting while auth state is loading
+  if (loading) {
+    return <div className="loading">Checking session...</div>;
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
@@ -75,9 +85,32 @@ const ProtectedRoute = ({ children }) => {
 
 // Home Route Component - redirects authenticated users to dashboard
 const HomeRoute = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading, currentUser } = useAuth();
+  
+  if (loading) {
+    return <Home />; // show Home content while session loads
+  }
   
   if (isAuthenticated) {
+    const perms = (currentUser && currentUser.featurePermissions) || {};
+    const normalizeBool = (val, fallback) => {
+      if (val === undefined || val === null) return fallback;
+      if (typeof val === 'string') {
+        const s = val.trim().toLowerCase();
+        if (s === 'true') return true;
+        if (s === 'false') return false;
+      }
+      return !!val;
+    };
+    const SHOW_RECHARGES_EFF = normalizeBool(perms.showRecharges, SHOW_RECHARGES);
+    const SHOW_BILL_PAYMENTS_EFF = normalizeBool(perms.showBillPayments, SHOW_BILL_PAYMENTS);
+    const SHOW_MONEY_TRANSFER_EFF = normalizeBool(perms.showMoneyTransfer, SHOW_MONEY_TRANSFER);
+
+    // If all three flows are disabled, send users to Brand Vouchers as home
+    if (!SHOW_RECHARGES_EFF && !SHOW_BILL_PAYMENTS_EFF && !SHOW_MONEY_TRANSFER_EFF) {
+      return <Navigate to="/vouchers" />;
+    }
+
     return <Navigate to="/dashboard" />;
   }
   
@@ -86,7 +119,12 @@ const HomeRoute = () => {
 
 // Admin Route Component
 const AdminRoute = ({ children }) => {
-  const { isAuthenticated, currentUser } = useAuth();
+  const { isAuthenticated, currentUser, loading } = useAuth();
+  
+  // Avoid redirecting while auth state is loading
+  if (loading) {
+    return <div className="loading">Verifying admin access...</div>;
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
@@ -153,6 +191,32 @@ function App() {
             element={
               <ProtectedRoute>
                 <BillPayment />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Aliases/redirects for quick actions */}
+          <Route 
+            path="/credit-card" 
+            element={
+              <ProtectedRoute>
+                <Navigate to="/bill-payment?type=credit-card" replace />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/emi-loan" 
+            element={
+              <ProtectedRoute>
+                <Navigate to="/bill-payment?type=loan" replace />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/insurance" 
+            element={
+              <ProtectedRoute>
+                <Navigate to="/bill-payment?type=insurance" replace />
               </ProtectedRoute>
             } 
           />

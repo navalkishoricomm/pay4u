@@ -12,6 +12,7 @@ const UserManagement = () => {
   const [newPassword, setNewPassword] = useState('');
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [editingPerms, setEditingPerms] = useState({});
 
   useEffect(() => {
     fetchUsers();
@@ -21,7 +22,24 @@ const UserManagement = () => {
     try {
       setLoading(true);
       const response = await axios.get('/auth/admin/users');
-      setUsers(response.data.data.users);
+      const fetched = response.data.data.users || [];
+      // Ensure featurePermissions exist and seed local editing state
+      const normalized = fetched.map(u => ({
+        ...u,
+        featurePermissions: {
+          showRecharges: u.featurePermissions?.showRecharges ?? false,
+          showBillPayments: u.featurePermissions?.showBillPayments ?? false,
+          showMoneyTransfer: u.featurePermissions?.showMoneyTransfer ?? false,
+          showAEPS: u.featurePermissions?.showAEPS ?? false,
+          showVouchers: u.featurePermissions?.showVouchers ?? true
+        }
+      }));
+      setUsers(normalized);
+      const initialEditing = {};
+      for (const u of normalized) {
+        initialEditing[u._id] = { ...u.featurePermissions };
+      }
+      setEditingPerms(initialEditing);
       setError('');
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to fetch users');
@@ -141,6 +159,7 @@ const UserManagement = () => {
               <th>Email</th>
               <th>Phone</th>
               <th>Role</th>
+              <th>Features</th>
               <th>Created</th>
               <th>Actions</th>
             </tr>
@@ -162,6 +181,47 @@ const UserManagement = () => {
                   <span className={`role-badge ${user.role}`}>
                     {user.role.toUpperCase()}
                   </span>
+                </td>
+                <td>
+                  <div className="feature-toggles">
+                    {['showRecharges','showBillPayments','showMoneyTransfer','showAEPS','showVouchers'].map(key => (
+                      <label key={key} className="toggle-item">
+                        <input
+                          type="checkbox"
+                          checked={!!editingPerms[user._id]?.[key]}
+                          onChange={(e) => {
+                            const value = e.target.checked;
+                            setEditingPerms(prev => ({
+                              ...prev,
+                              [user._id]: {
+                                ...(prev[user._id] || {}),
+                                [key]: value
+                              }
+                            }));
+                          }}
+                        />
+                        <span className="toggle-label">{key.replace('show','')}</span>
+                      </label>
+                    ))}
+                    <button
+                      className="btn btn-primary btn-small"
+                      onClick={async () => {
+                        try {
+                          setError('');
+                          const payload = editingPerms[user._id] || {};
+                          const res = await axios.patch(`/auth/admin/users/${user._id}/feature-permissions`, payload);
+                          setSuccess('Updated features for ' + user.email);
+                          // Update local users state with server response
+                          const updatedUser = res.data?.data?.user || user;
+                          setUsers(prev => prev.map(u => u._id === user._id ? updatedUser : u));
+                          setTimeout(() => setSuccess(''), 4000);
+                        } catch (err) {
+                          setError(err.response?.data?.message || 'Failed to update features');
+                        }
+                      }}
+                      style={{ marginTop: '0.5rem' }}
+                    >Save</button>
+                  </div>
                 </td>
                 <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                 <td>
