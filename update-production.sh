@@ -97,8 +97,11 @@ update_backend() {
     
     cd "$APP_PATH/backend"
     
-    # Install/update dependencies
-    sudo -u $APP_USER npm ci --production
+    # Install/update dependencies with fallback if lock file is out of sync
+    if ! sudo -u $APP_USER npm ci --production; then
+        log_warning "npm ci failed (lock mismatch). Falling back to 'npm install --production'"
+        sudo -u $APP_USER npm install --production
+    fi
     
     # Run any database migrations if they exist
     if [ -d "migrations" ]; then
@@ -114,8 +117,11 @@ update_frontend() {
     
     cd "$APP_PATH/frontend"
     
-    # Install dependencies
-    sudo -u $APP_USER npm ci
+    # Install dependencies with fallback if lock file is out of sync
+    if ! sudo -u $APP_USER npm ci; then
+        log_warning "npm ci failed (lock mismatch). Falling back to 'npm install'"
+        sudo -u $APP_USER npm install
+    fi
     
     # Build production version
     sudo -u $APP_USER npm run build
