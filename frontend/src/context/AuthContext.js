@@ -3,6 +3,9 @@ import axios from 'axios';
 
 // Set axios base URL
 axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+if (typeof window !== 'undefined') {
+  window.__PAY4U_API_BASE__ = axios.defaults.baseURL;
+}
 console.log('AuthContext - API Base URL:', axios.defaults.baseURL);
 
 const AuthContext = createContext();

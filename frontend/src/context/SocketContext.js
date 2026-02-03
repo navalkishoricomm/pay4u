@@ -49,10 +49,24 @@ export const SocketProvider = ({ children }) => {
         setIsConnected(true);
         
         // Join user-specific room
-        if (currentUser.role === 'admin') {
-          newSocket.emit('join_admin', currentUser.id);
+        const userId = currentUser?._id || currentUser?.id;
+        if (!userId) {
+          console.warn('Socket join skipped: missing userId on currentUser', currentUser);
+        } else if (currentUser.role === 'admin') {
+          newSocket.emit('join_admin', userId);
         } else {
-          newSocket.emit('join', currentUser.id);
+          newSocket.emit('join', userId);
+        }
+      });
+
+      // Listen for initial unread count from server
+      newSocket.on('unread_count', (data) => {
+        console.log('Initial unread_count received:', data);
+        const count = typeof data === 'number' ? data : data?.count;
+        if (typeof count === 'number') {
+          setUnreadCount(count);
+          // Broadcast to window for any listeners
+          window.dispatchEvent(new CustomEvent('unreadCount', { detail: { unreadCount: count } }));
         }
       });
 

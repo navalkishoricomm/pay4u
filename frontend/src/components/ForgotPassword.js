@@ -1,86 +1,50 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import './Auth.css';
+import axios from 'axios';
+
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
+    setMessage(null);
+    setError(null);
 
     try {
-      const response = await fetch('http://localhost:5001/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage('Password reset link has been sent to your email address.');
-        setEmail('');
-      } else {
-        setError(data.message || 'Something went wrong. Please try again.');
-      }
+      const response = await axios.post(`${API_BASE}/auth/forgot-password`, { email });
+      setMessage(response.data.message || 'Password reset link sent to your email');
     } catch (err) {
-      setError('Network error. Please check your connection and try again.');
+      setError(err.response?.data?.message || 'Failed to send reset link');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <h2>Forgot Password</h2>
-          <p>Enter your email address and we'll send you a link to reset your password.</p>
+    <div className="forgot-password-container">
+      <h2>Forgot Password</h2>
+      {message && <div className="success-message">{message}</div>}
+      {error && <div className="error-message">{error}</div>}
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="Enter your email address"
-              disabled={loading}
-            />
-          </div>
-
-          {error && <div className="error-message">{error}</div>}
-          {message && <div className="success-message">{message}</div>}
-
-          <button 
-            type="submit" 
-            className="auth-button"
-            disabled={loading || !email}
-          >
-            {loading ? 'Sending...' : 'Send Reset Link'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p>
-            Remember your password? <Link to="/login">Sign In</Link>
-          </p>
-          <p>
-            Don't have an account? <Link to="/signup">Sign Up</Link>
-          </p>
-        </div>
-      </div>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Sending...' : 'Send Reset Link'}
+        </button>
+      </form>
     </div>
   );
 };

@@ -210,15 +210,17 @@ exports.getRechargeStatus = catchAsync(async (req, res, next) => {
 
 // Get operators list
 exports.getOperators = catchAsync(async (req, res, next) => {
-  const { type } = req.query; // 'mobile' or 'dth'
+  const { type } = req.query; // service type filter
 
+  const validServiceTypes = ['mobile', 'dth', 'electricity', 'gas', 'water', 'broadband', 'loan', 'insurance', 'landline', 'creditcard', 'postpaid', 'cylinder'];
+  
   const query = { isActive: true };
-  if (type && ['mobile', 'dth'].includes(type)) {
+  if (type && validServiceTypes.includes(type)) {
     query.serviceType = type;
   }
 
   const operators = await OperatorConfig.find(query)
-    .select('operatorCode operatorName serviceType processingMode isActive minAmount maxAmount allowedAmounts circles')
+    .select('operatorCode operatorName serviceType processingMode isActive minAmount maxAmount allowedAmounts circles bbps.supportsBillFetch')
     .sort({ operatorName: 1 });
 
   // Group by service type if no specific type requested
@@ -234,7 +236,8 @@ exports.getOperators = catchAsync(async (req, res, next) => {
         minAmount: operator.minAmount,
         maxAmount: operator.maxAmount,
         allowedAmounts: operator.allowedAmounts,
-        circles: operator.circles
+        circles: operator.circles,
+        supportsBillFetch: !!(operator.bbps && operator.bbps.supportsBillFetch)
       });
       return acc;
     }, {});
@@ -253,7 +256,8 @@ exports.getOperators = catchAsync(async (req, res, next) => {
     minAmount: operator.minAmount,
     maxAmount: operator.maxAmount,
     allowedAmounts: operator.allowedAmounts,
-    circles: operator.circles
+    circles: operator.circles,
+    supportsBillFetch: !!(operator.bbps && operator.bbps.supportsBillFetch)
   }));
 
   res.status(200).json({
@@ -294,4 +298,83 @@ exports.getCircles = catchAsync(async (req, res, next) => {
     status: 'success',
     data: circles
   });
+});
+
+// Bill payment for other services (electricity, water, gas, broadband, etc.)
+exports.billPayment = catchAsync(async (req, res, next) => {
+  const { serviceType, customerNumber, operator, amount } = req.body;
+  const userId = req.user.id;
+
+  // Validate input
+  if (!serviceType || !customerNumber || !operator || !amount) {
+    return next(new AppError('All fields are required', 400));
+  }
+
+  // Validate service type
+  const validServiceTypes = ['electricity', 'water', 'gas', 'broadband', 'loan', 'insurance', 'landline', 'creditcard', 'postpaid', 'cylinder'];
+  if (!validServiceTypes.includes(serviceType)) {
+    return next(new AppError('Invalid service type', 400));
+  }
+
+  // Validate amount
+  if (amount < 50 || amount > 50000) {
+    return next(new AppError('Amount must be between ₹50 and ₹50,000', 400));
+  }
+
+  // Get user and check wallet balance
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  if (user.walletBalance < amount) {
+    return next(new AppError('Insufficient wallet balance', 400));
+  }
+
+  // Get operator configuration
+  const operatorConfig = await OperatorConfig.findOne({ 
+    operatorCode: operator, 
+    serviceType: serviceType,
+    isActive: true 
+  });
+
+  if (!operatorConfig) {
+    return next(new AppError('Operator not found or inactive', 404));
+  }
+
+  // Validate amount against operator limits
+  if (amount < operatorConfig.minAmount || amount > operatorConfig.maxAmount) {
+    return next(new AppError(
+      `Amount must be between ₹${operatorConfig.minAmount} and ₹${operatorConfig.maxAmount} for this operator`, 
+      400
+    ));
+  }
+
+  try {
+    // Process bill payment
+    const result = await rechargeService.processBillPayment({
+      userId,
+      serviceType,
+      customerNumber,
+      operator: operatorConfig,
+      amount,
+      userWalletBalance: user.walletBalance
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} bill payment initiated successfully`,
+      data: {
+        transactionId: result.transactionId,
+        status: result.status,
+        amount: result.amount,
+        operator: operatorConfig.operatorName,
+        customerNumber: result.customerNumber,
+        processingMode: result.processingMode
+      }
+    });
+  } catch (error) {
+    console.error('Bill payment error:', error);
+    return next(new AppError(error.message || 'Bill payment failed', 500));
+  }
 });

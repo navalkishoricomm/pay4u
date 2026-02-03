@@ -3,16 +3,20 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaWallet, FaMobileAlt, FaSatelliteDish, FaFileInvoiceDollar } from 'react-icons/fa';
 import '../styles/home.css';
+import { SHOW_RECHARGES, SHOW_BILL_PAYMENTS } from '../config/featureFlags';
 
 const Home = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currentUser } = useAuth();
+  const perms = (currentUser && currentUser.featurePermissions) || {};
+  const SHOW_RECHARGES_EFF = perms.showRecharges ?? SHOW_RECHARGES;
+  const SHOW_BILL_PAYMENTS_EFF = perms.showBillPayments ?? SHOW_BILL_PAYMENTS;
 
   return (
     <div className="home-container">
       <div className="hero-section">
         <h1>Welcome to Pay4U</h1>
         <p className="lead">
-          Your one-stop solution for mobile recharges, DTH services, and bill payments.
+          Your trusted place to buy and manage branded digital vouchers.
         </p>
         
         {!isAuthenticated ? (
@@ -41,32 +45,38 @@ const Home = () => {
               <FaWallet />
             </div>
             <h3>Digital Wallet</h3>
-            <p>Securely store money in your digital wallet for quick and easy transactions.</p>
+            <p>Securely store balance and pay for voucher purchases instantly.</p>
           </div>
-          
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaMobileAlt />
+
+          {SHOW_RECHARGES_EFF && (
+            <div className="feature-card">
+              <div className="feature-icon">
+                <FaMobileAlt />
+              </div>
+              <h3>Mobile Recharge</h3>
+              <p>Recharge your prepaid mobile across all major operators instantly.</p>
             </div>
-            <h3>Mobile Recharge</h3>
-            <p>Recharge your prepaid mobile across all major operators instantly.</p>
-          </div>
-          
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaSatelliteDish />
+          )}
+
+          {SHOW_RECHARGES_EFF && (
+            <div className="feature-card">
+              <div className="feature-icon">
+                <FaSatelliteDish />
+              </div>
+              <h3>DTH Recharge</h3>
+              <p>Pay for your DTH services and enjoy uninterrupted entertainment.</p>
             </div>
-            <h3>DTH Recharge</h3>
-            <p>Pay for your DTH services and enjoy uninterrupted entertainment.</p>
-          </div>
-          
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaFileInvoiceDollar />
+          )}
+
+          {SHOW_BILL_PAYMENTS_EFF && (
+            <div className="feature-card">
+              <div className="feature-icon">
+                <FaFileInvoiceDollar />
+              </div>
+              <h3>Bill Payments</h3>
+              <p>Pay your utility bills, credit cards, and more in just a few clicks.</p>
             </div>
-            <h3>Bill Payments</h3>
-            <p>Pay your utility bills, credit cards, and more in just a few clicks.</p>
-          </div>
+          )}
         </div>
       </div>
 
@@ -87,8 +97,8 @@ const Home = () => {
           
           <div className="step">
             <div className="step-number">3</div>
-            <h3>Make Payments</h3>
-            <p>Use your wallet balance for recharges and bill payments.</p>
+            <h3>Buy Vouchers</h3>
+            <p>Use your wallet balance to purchase branded digital vouchers.</p>
           </div>
         </div>
       </div>

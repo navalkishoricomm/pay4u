@@ -299,6 +299,57 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// Admin: update per-user feature permissions
+exports.updateUserFeaturePermissions = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'Only admins can update user feature permissions'
+      });
+    }
+
+    const { id } = req.params;
+    const allowedKeys = ['showRecharges', 'showBillPayments', 'showMoneyTransfer', 'showAEPS', 'showVouchers'];
+    const updates = req.body || {};
+
+    // Validate keys
+    const invalid = Object.keys(updates).filter(k => !allowedKeys.includes(k));
+    if (invalid.length > 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: `Invalid permission keys: ${invalid.join(', ')}`
+      });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'User not found'
+      });
+    }
+
+    user.featurePermissions = {
+      ...(user.featurePermissions || {}),
+      ...updates
+    };
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Feature permissions updated successfully',
+      data: { user }
+    });
+  } catch (error) {
+    console.error('Error updating feature permissions:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
 // Forgot password
 exports.forgotPassword = async (req, res) => {
   try {

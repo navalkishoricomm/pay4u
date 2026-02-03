@@ -46,7 +46,7 @@ class RechargeService {
 
     // Create transaction record
     const transaction = await this.createTransaction({
-      ...rechargeData,
+...rechargeData,
       operatorConfig,
       processingMode: operatorConfig.processingMode
     });
@@ -203,10 +203,10 @@ class RechargeService {
     }
 
     const credentials = apiProvider.getCredentials();
-    const endpoint = this.getEndpoint(apiProvider, transaction.type);
+    const endpoint = this.getEndpoint(apiProvider, operatorConfig.serviceType);
     
     if (!endpoint) {
-      throw new Error(`No endpoint configured for ${transaction.type} recharge`);
+      throw new Error(`No endpoint configured for ${operatorConfig.serviceType} transaction`);
     }
 
     const requestData = this.buildRequestData(transaction, operatorConfig, apiProvider);
@@ -259,7 +259,7 @@ class RechargeService {
       case 'dth':
         return apiProvider.endpoints.dthRecharge;
       default:
-        return null;
+        return apiProvider.endpoints.billPayment;
     }
   }
 
@@ -274,11 +274,17 @@ class RechargeService {
       operatorName: operatorConfig.apiMapping.operatorName || operatorConfig.operatorName
     };
 
-    if (transaction.type === 'mobile') {
-      baseData.mobileNumber = transaction.mobileNumber;
-      baseData.circle = operatorConfig.apiMapping.circleMapping?.get(transaction.circle) || transaction.circle;
-    } else if (transaction.type === 'dth') {
-      baseData.customerNumber = transaction.customerNumber;
+    const service = operatorConfig.serviceType;
+
+    if (service === 'mobile') {
+      baseData.mobileNumber = transaction.rechargeData?.mobileNumber || transaction.mobileNumber;
+      baseData.circle = operatorConfig.apiMapping.circleMapping?.get(transaction.rechargeData?.circle || transaction.circle) || (transaction.rechargeData?.circle || transaction.circle);
+    } else if (service === 'dth') {
+      baseData.customerNumber = transaction.rechargeData?.customerNumber || transaction.customerNumber;
+    } else {
+      // Other bill payments (utilities, telecom postpaid, broadband, financial services)
+      baseData.customerNumber = transaction.rechargeData?.customerNumber || transaction.customerNumber;
+      // Include any custom fields if configured
     }
 
     // Add custom fields if configured
@@ -419,9 +425,9 @@ class RechargeService {
       wallet: wallet._id,
       userId: data.userId,
       amount: data.amount,
-      type: data.serviceType === 'mobile' ? 'mobile-recharge' : 'dth-recharge',
+      type: (data.serviceType === 'mobile') ? 'mobile-recharge' : (data.serviceType === 'dth') ? 'dth-recharge' : 'bill-payment',
       status: 'pending',
-      description: `${data.serviceType.toUpperCase()} Recharge - ${data.operatorCode}`,
+      description: `${data.serviceType.toUpperCase()} ${data.serviceType === 'mobile' || data.serviceType === 'dth' ? 'Recharge' : 'Bill Payment'} - ${data.operatorCode}`,
       transactionId: transactionId,
       reference: transactionId,
       operator: data.operatorCode,
@@ -586,6 +592,97 @@ class RechargeService {
     } catch (error) {
       console.error('API status check failed:', error);
       return null;
+    }
+  }
+
+  /**
+   * Process bill payment (utilities, postpaid, broadband, etc.)
+   */
+  async processBillPayment(billData) {
+    const { userId, serviceType, customerNumber, operator, amount } = billData;
+
+    // Validate operator configuration
+    if (!operator) {
+      throw new AppError('Operator not found or not supported', 404);
+    }
+    if (!operator.isActive) {
+      throw new AppError('Operator is currently inactive', 400);
+    }
+    if (operator.isInMaintenance && operator.isInMaintenance()) {
+      throw new AppError(operator.maintenanceMode?.message || 'Operator is under maintenance', 503);
+    }
+
+    // Validate amount against operator limits
+    if (typeof operator.isAmountValid === 'function') {
+      if (!operator.isAmountValid(amount)) {
+        throw new AppError(`Amount must be between ₹${operator.minAmount || 50} and ₹${operator.maxAmount || 50000}`, 400);
+      }
+    } else {
+      if (amount < 50 || amount > 50000) {
+        throw new AppError('Amount must be between ₹50 and ₹50,000', 400);
+      }
+    }
+
+    // Create transaction record and deduct wallet
+    const transaction = await this.createTransaction({
+      userId,
+      serviceType,
+      amount,
+      operatorCode: operator.operatorCode,
+      customerNumber,
+      operatorConfig: operator,
+      processingMode: operator.processingMode
+    });
+
+    try {
+      let result;
+
+      switch (operator.processingMode) {
+        case 'api':
+          result = await this.processApiRecharge(transaction, operator);
+          break;
+        case 'manual':
+          result = await this.processManualRecharge(transaction, operator);
+          break;
+        case 'disabled':
+          throw new AppError('This operator is currently disabled', 503);
+        default:
+          throw new AppError('Invalid processing mode', 500);
+      }
+
+      // Update operator statistics
+      await operator.updateStats(
+        result.status === 'success' ? 'success' : result.status === 'failed' ? 'failed' : 'pending',
+        amount,
+        result.processingTime
+      );
+
+      return {
+        transactionId: transaction.transactionId,
+        status: result.status,
+        amount: transaction.amount,
+        customerNumber: transaction.rechargeData?.customerNumber || customerNumber,
+        processingMode: operator.processingMode
+      };
+    } catch (error) {
+      // Mark failed
+      transaction.status = 'failed';
+      transaction.failureReason = error.message;
+      await transaction.save();
+
+      // Refund wallet balance on failure
+      const wallet = await Wallet.findOne({ user: new mongoose.Types.ObjectId(userId) });
+      if (wallet) {
+        wallet.balance += amount;
+        await wallet.save();
+      }
+
+      // Update operator statistics
+      if (typeof operator.updateStats === 'function') {
+        await operator.updateStats('failed', amount);
+      }
+
+      throw error;
     }
   }
 }

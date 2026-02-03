@@ -21,7 +21,10 @@ const TransactionStatusUpdates = () => {
 
   const fetchRecentStatusUpdates = async () => {
     try {
-      const response = await axios.get('/transactions/status-updates');
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/transactions/status-updates', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const updates = response.data.data.statusUpdates;
       
       // Check if there are new updates compared to what we already have
@@ -46,7 +49,7 @@ const TransactionStatusUpdates = () => {
       setRecentUpdates(updates);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching transaction status updates:', error);
+      console.error('Error fetching transaction status updates:', error?.response?.data || error);
       setLoading(false);
     }
   };

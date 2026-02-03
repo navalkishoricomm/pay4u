@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './Recharge.css';
 
 const Recharge = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('mobile');
-  const [operators, setOperators] = useState({ mobile: [], dth: [] });
+  const [operators, setOperators] = useState({});
   const [circles] = useState([
     'Andhra Pradesh', 'Assam', 'Bihar', 'Chennai', 'Delhi', 'Gujarat',
     'Haryana', 'Himachal Pradesh', 'Jammu Kashmir', 'Karnataka',
@@ -34,16 +36,10 @@ const Recharge = () => {
 
   const fetchOperators = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/recharge/operators', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setOperators(data.data);
-      }
+      const response = await axios.get('/recharge/operators');
+       if (response.data.status === 'success') {
+         setOperators(response.data.data);
+       }
     } catch (error) {
       console.error('Error fetching operators:', error);
     }
@@ -51,15 +47,9 @@ const Recharge = () => {
 
   const fetchRechargeHistory = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/recharge/history?limit=5', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setRechargeHistory(data.data.recharges);
+      const response = await axios.get('/recharge/history?limit=5');
+      if (response.data.status === 'success') {
+        setRechargeHistory(response.data.data.recharges);
       }
     } catch (error) {
       console.error('Error fetching recharge history:', error);
@@ -80,35 +70,42 @@ const Recharge = () => {
     setMessage('');
 
     try {
-      const token = localStorage.getItem('token');
-      const endpoint = activeTab === 'mobile' ? '/recharge/mobile' : '/recharge/dth';
+      let endpoint, payload;
       
-      const payload = activeTab === 'mobile' 
-        ? {
-            mobileNumber: formData.mobileNumber,
-            operator: formData.operator,
-            amount: parseFloat(formData.amount),
-            circle: formData.circle
-          }
-        : {
-            customerNumber: formData.customerNumber,
-            operator: formData.operator,
-            amount: parseFloat(formData.amount)
-          };
+      if (activeTab === 'mobile') {
+        endpoint = '/recharge/mobile';
+        payload = {
+          mobileNumber: formData.mobileNumber,
+          operator: formData.operator,
+          amount: parseFloat(formData.amount),
+          circle: formData.circle
+        };
+      } else if (activeTab === 'dth') {
+        endpoint = '/recharge/dth';
+        payload = {
+          customerNumber: formData.customerNumber,
+          operator: formData.operator,
+          amount: parseFloat(formData.amount)
+        };
+      } else {
+        // For other service types (electricity, water, gas, broadband)
+        endpoint = '/recharge/bill-payment';
+        payload = {
+          serviceType: activeTab,
+          customerNumber: formData.customerNumber,
+          operator: formData.operator,
+          amount: parseFloat(formData.amount)
+        };
+      }
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
+      const response = await axios.post(endpoint, payload);
+      const data = response.data;
       
       if (data.success) {
-        setMessage(`${activeTab === 'mobile' ? 'Mobile' : 'DTH'} recharge successful! Transaction ID: ${data.data.transactionId}`);
+        const serviceLabel = activeTab === 'mobile' ? 'Mobile' : 
+                           activeTab === 'dth' ? 'DTH' : 
+                           activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+        setMessage(`${serviceLabel} ${activeTab === 'mobile' ? 'recharge' : 'bill payment'} successful! Transaction ID: ${data.data.transactionId}`);
         setFormData({
           mobileNumber: '',
           customerNumber: '',
@@ -118,10 +115,10 @@ const Recharge = () => {
         });
         fetchRechargeHistory();
       } else {
-        setMessage(data.message || 'Recharge failed. Please try again.');
+        setMessage(data.message || 'Transaction failed. Please try again.');
       }
     } catch (error) {
-      console.error('Recharge error:', error);
+      console.error('Transaction error:', error);
       setMessage('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
@@ -156,6 +153,36 @@ const Recharge = () => {
           onClick={() => setActiveTab('dth')}
         >
           DTH Recharge
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'electricity' ? 'active' : ''}`}
+          onClick={() => setActiveTab('electricity')}
+        >
+          Electricity
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'water' ? 'active' : ''}`}
+          onClick={() => setActiveTab('water')}
+        >
+          Water
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'gas' ? 'active' : ''}`}
+          onClick={() => setActiveTab('gas')}
+        >
+          Gas
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'cylinder' ? 'active' : ''}`}
+          onClick={() => setActiveTab('cylinder')}
+        >
+          LPG Cylinder
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'broadband' ? 'active' : ''}`}
+          onClick={() => setActiveTab('broadband')}
+        >
+          Broadband
         </button>
       </div>
 
@@ -208,7 +235,7 @@ const Recharge = () => {
                 </select>
               </div>
             </>
-          ) : (
+          ) : activeTab === 'dth' ? (
             <>
               <div className="form-group">
                 <label>Customer Number</label>
@@ -239,6 +266,45 @@ const Recharge = () => {
                 </select>
               </div>
             </>
+          ) : (
+            <>
+              <div className="form-group">
+                <label>
+                  {activeTab === 'electricity' ? 'Consumer Number' :
+                   activeTab === 'water' ? 'Consumer ID' :
+                   activeTab === 'gas' ? 'Customer ID' :
+                   activeTab === 'broadband' ? 'Account Number' :
+                   'Customer Number'}
+                </label>
+                <input
+                  type="text"
+                  name="customerNumber"
+                  value={formData.customerNumber}
+                  onChange={handleInputChange}
+                  placeholder={`Enter ${activeTab === 'electricity' ? 'Consumer Number' :
+                    activeTab === 'water' ? 'Consumer ID' :
+                    activeTab === 'gas' ? 'Customer ID' :
+                    activeTab === 'broadband' ? 'Account Number' :
+                    'Customer Number'}`}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Provider</label>
+                <select
+                  name="operator"
+                  value={formData.operator}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Select Provider</option>
+                  {operators[activeTab]?.map(op => (
+                    <option key={op.code} value={op.code}>{op.name}</option>
+                  ))}
+                </select>
+              </div>
+            </>
           )}
           
           <div className="form-group">
@@ -248,9 +314,9 @@ const Recharge = () => {
               name="amount"
               value={formData.amount}
               onChange={handleInputChange}
-              placeholder={activeTab === 'mobile' ? 'Min ₹10, Max ₹5000' : 'Min ₹50, Max ₹10000'}
+              placeholder={activeTab === 'mobile' ? 'Min ₹10, Max ₹5000' : 'Min ₹50, Max ₹50000'}
               min={activeTab === 'mobile' ? '10' : '50'}
-              max={activeTab === 'mobile' ? '5000' : '10000'}
+              max={activeTab === 'mobile' ? '5000' : '50000'}
               required
             />
           </div>
@@ -260,7 +326,7 @@ const Recharge = () => {
             className="recharge-button"
             disabled={loading}
           >
-            {loading ? 'Processing...' : `Recharge Now`}
+            {loading ? 'Processing...' : activeTab === 'mobile' ? 'Recharge Now' : 'Pay Bill'}
           </button>
         </form>
         

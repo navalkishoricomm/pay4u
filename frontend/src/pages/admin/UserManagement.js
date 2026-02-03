@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import {
+  SHOW_RECHARGES,
+  SHOW_BILL_PAYMENTS,
+  SHOW_MONEY_TRANSFER,
+  SHOW_AEPS,
+  SHOW_VOUCHERS
+} from '../../config/featureFlags';
 import './UserManagement.css';
 
 const UserManagement = () => {
@@ -27,11 +34,11 @@ const UserManagement = () => {
       const normalized = fetched.map(u => ({
         ...u,
         featurePermissions: {
-          showRecharges: u.featurePermissions?.showRecharges ?? false,
-          showBillPayments: u.featurePermissions?.showBillPayments ?? false,
-          showMoneyTransfer: u.featurePermissions?.showMoneyTransfer ?? false,
-          showAEPS: u.featurePermissions?.showAEPS ?? false,
-          showVouchers: u.featurePermissions?.showVouchers ?? true
+          showRecharges: u.featurePermissions?.showRecharges ?? SHOW_RECHARGES,
+          showBillPayments: u.featurePermissions?.showBillPayments ?? SHOW_BILL_PAYMENTS,
+          showMoneyTransfer: u.featurePermissions?.showMoneyTransfer ?? SHOW_MONEY_TRANSFER,
+          showAEPS: u.featurePermissions?.showAEPS ?? SHOW_AEPS,
+          showVouchers: u.featurePermissions?.showVouchers ?? SHOW_VOUCHERS
         }
       }));
       setUsers(normalized);
@@ -188,6 +195,8 @@ const UserManagement = () => {
                       <label key={key} className="toggle-item">
                         <input
                           type="checkbox"
+                          className="form-check-input"
+                          style={{ opacity: 1, visibility: 'visible', display: 'block', width: '16px', height: '16px', margin: '0 5px 0 0' }}
                           checked={!!editingPerms[user._id]?.[key]}
                           onChange={(e) => {
                             const value = e.target.checked;

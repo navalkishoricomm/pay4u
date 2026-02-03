@@ -75,9 +75,9 @@ const auditMiddleware = {
       // Create audit record
       const auditData = {
         // Transaction Reference
-        transactionId: transactionInfo.transactionId || new require('mongoose').Types.ObjectId(),
+        transactionId: transactionInfo.transactionId || new (require('mongoose').Types.ObjectId)(),
         transactionType: transactionInfo.type,
-        transactionReference: transactionInfo.reference,
+        transactionReference: transactionInfo.reference || transactionInfo.transactionId || `UNKNOWN-${Date.now()}`,
         
         // User Information
         userId: req.user?.id || req.body.userId,
@@ -155,7 +155,7 @@ const auditMiddleware = {
       // Check for duplicate audit records before saving
       const existingAudit = await TransactionAudit.findOne({
         transactionId: transactionInfo.transactionId,
-        transactionReference: transactionInfo.reference,
+        transactionReference: transactionInfo.reference || transactionInfo.transactionId || `UNKNOWN-${Date.now()}`,
         userId: req.user._id
       });
       
@@ -196,6 +196,7 @@ const auditMiddleware = {
       '/api/transactions/mobile-recharge',
       '/api/transactions/dth-recharge',
       '/api/transactions/bill-payment',
+      '/api/bbps/bills/fetch',
       '/api/voucher/purchase',
       '/api/wallet/add-money',
       '/api/wallet/transfer',

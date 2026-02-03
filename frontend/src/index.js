@@ -6,12 +6,15 @@ import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <Router>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </Router>
-  </React.StrictMode>
+// In development, avoid React.StrictMode to prevent double effects
+// that can appear as flickering or rapid redirects during auth init.
+const isDev = process.env.NODE_ENV !== 'production';
+const appTree = (
+  <Router>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </Router>
 );
+
+root.render(isDev ? appTree : <React.StrictMode>{appTree}</React.StrictMode>);

@@ -1011,3 +1011,412 @@ img {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Quick Action Cards - Paytm style */
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+  background-color: var(--white-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+}
+
+.quick-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--box-shadow-hover);
+}
+
+.quick-action-icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--white-color);
+  background: var(--gray-light);
+  font-size: 1.25rem;
+}
+
+.quick-action-label {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .quick-action-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.35rem;
+  }
+
+  .quick-action-label {
+    font-size: 0.875rem;
+  }
+}
+
+/* Service-specific gradients for quick actions */
+.quick-action-icon.service-mobile {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.quick-action-icon.service-dth {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.quick-action-icon.service-bill {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.quick-action-icon.service-money-transfer {
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+}
+
+.quick-action-icon.service-aeps {
+  background: linear-gradient(135deg, #5ee7df 0%, #b490ca 100%);
+}
+
+.quick-action-icon.service-credit-card {
+  background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+}
+
+.quick-action-icon.service-loan {
+  background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+}
+
+.quick-action-icon.service-insurance {
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+}
+
+.quick-action-icon.service-vouchers {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.quick-action-icon.service-transactions {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+@media (min-width: 768px) {
+  .dashboard-icon {
+    font-size: 2.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+
+/* Card Content */
+.card-content {
+  flex: 1;
+}
+
+.dashboard-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+
+.dashboard-card p {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+@media (min-width: 768px) {
+  .dashboard-card h3 {
+    font-size: 1.125rem;
+  }
+  
+  .dashboard-card p {
+    font-size: 0.875rem;
+  }
+}
+
+/* Card Arrow */
+.card-arrow {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
+  transition: var(--transition);
+}
+
+.dashboard-card:hover .card-arrow {
+  color: var(--primary-color);
+  transform: translateX(2px);
+}
+
+/* Button Enhancements */
+.btn-icon {
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 576px) {
+  .btn-icon {
+    margin-right: 0.25rem;
+  }
+}
+
+/* Mobile-First Wallet */
+.wallet-card {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--white-color);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.wallet-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.wallet-balance {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0.75rem 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.wallet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 576px) {
+  .wallet-card {
+    padding: 2rem;
+  }
+  
+  .wallet-balance {
+    font-size: 2.25rem;
+  }
+  
+  .wallet-actions {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .wallet-balance {
+    font-size: 2.5rem;
+  }
+}
+
+/* Mobile-First Transactions */
+.transaction-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+  cursor: pointer;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.transaction-item:hover {
+  background-color: var(--light-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.transaction-item:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.transaction-item:last-child {
+  border-bottom: none;
+}
+
+.transaction-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.transaction-type {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.transaction-date {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.transaction-amount {
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+.transaction-amount.credit {
+  color: var(--success-color);
+}
+
+.transaction-amount.debit {
+  color: var(--danger-color);
+}
+
+/* Mobile Transaction Styles */
+@media (max-width: 768px) {
+  .transaction-item {
+    padding: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .transaction-item h4 {
+    font-size: 0.9rem !important;
+  }
+  
+  .transaction-amount {
+    font-size: 0.9rem !important;
+  }
+  
+  .status-badge {
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.4rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .transaction-item {
+    padding: 1.25rem 1rem;
+  }
+  
+  .transaction-type {
+    font-size: 1rem;
+  }
+  
+  .transaction-date {
+    font-size: 0.875rem;
+  }
+  
+  .transaction-amount {
+    font-size: 1rem;
+  }
+}
+
+/* Additional Mobile Utilities */
+.mobile-only {
+  display: block;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* Touch-friendly spacing */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--primary-color);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Safe area for notched devices */
+@supports (padding: max(0px)) {
+  .navbar {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  .container {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Improved focus states for accessibility */
+.btn:focus,
+.form-control:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --border-color: #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

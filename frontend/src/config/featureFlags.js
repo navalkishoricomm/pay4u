@@ -1,7 +1,7 @@
 // Feature flags to control visibility of major flows without removing code.
 // Toggle these to show/hide sections in the UI.
 
-export const SHOW_RECHARGES = false; // Mobile/DTH quick actions and routes
+export const SHOW_RECHARGES = true; // Mobile/DTH quick actions and routes
 export const SHOW_BILL_PAYMENTS = false; // Bill payments quick actions and routes
 export const SHOW_MONEY_TRANSFER = false; // Money transfer flow
 export const SHOW_AEPS = false; // AEPS flow

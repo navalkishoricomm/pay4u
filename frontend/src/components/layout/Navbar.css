@@ -117,8 +117,27 @@
 .bell-icon {
   font-size: 1.3rem;
   color: #4a5568;
+  display: inline-block;
+  transition: transform 0.2s ease-in-out;
 }
 
+.bell-icon.ring {
+  animation: bell-ring 1.2s ease-in-out;
+}
+
+@keyframes bell-ring {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-12deg); }
+  30% { transform: rotate(9deg); }
+  40% { transform: rotate(-6deg); }
+  50% { transform: rotate(3deg); }
+  60% { transform: rotate(-2deg); }
+  70% { transform: rotate(1deg); }
+  80% { transform: rotate(-1deg); }
+  90% { transform: rotate(0.5deg); }
+  100% { transform: rotate(0deg); }
+}
 .notification-count {
   position: absolute;
   top: -4px;

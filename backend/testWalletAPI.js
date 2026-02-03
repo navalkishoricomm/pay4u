@@ -9,8 +9,21 @@ async function testWalletAPI() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
     
-    // Find a test user
-    const user = await User.findOne({ email: { $regex: /test/i } });
+    // Accept optional email from CLI args
+    const emailArg = process.argv[2];
+
+    // Find a test user (prefer provided email, then specific known test user, then any test, then first user)
+    let user = null;
+    if (emailArg) {
+      user = await User.findOne({ email: emailArg });
+      if (!user) console.log(`User with email ${emailArg} not found, trying fallbacks...`);
+    }
+    if (!user) {
+      user = await User.findOne({ email: 'testuser@pay4u.com' });
+    }
+    if (!user) {
+      user = await User.findOne({ email: { $regex: /test/i } });
+    }
     if (!user) {
       console.log('No test user found, using first available user');
       const firstUser = await User.findOne({ role: 'user' });
@@ -31,7 +44,7 @@ async function testWalletAPI() {
     console.log('Generated JWT token:', token.substring(0, 50) + '...');
     
     // Find the user's wallet
-    const wallet = await Wallet.findOne({ user: user._id });
+    let wallet = await Wallet.findOne({ user: user._id });
     
     if (!wallet) {
       console.log('❌ No wallet found for this user');
@@ -42,6 +55,16 @@ async function testWalletAPI() {
         console.log('⚠️  Found wallet with userId field instead of user field');
         console.log('Wallet data:', walletWithUserId);
       }
+
+      // Create a wallet if missing
+      console.log('Creating a new wallet with initial balance for the user...');
+      wallet = await Wallet.create({
+        user: user._id,
+        balance: 10000,
+        currency: 'INR',
+        isActive: true
+      });
+      console.log('✅ Wallet created:', { id: wallet._id, balance: wallet.balance, currency: wallet.currency });
     } else {
       console.log('✅ Wallet found:');
       console.log('- Balance:', wallet.balance);
@@ -52,6 +75,7 @@ async function testWalletAPI() {
     
     // Test the wallet controller logic
     console.log('\n--- Testing Wallet Controller Logic ---');
+    console.log('Fetching wallet for user:', user._id.toString());
     const mockReq = {
       user: { id: user._id }
     };

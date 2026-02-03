@@ -210,10 +210,11 @@ exports.getRechargeStatus = catchAsync(async (req, res, next) => {
 
 // Get operators list
 exports.getOperators = catchAsync(async (req, res, next) => {
-  const { type } = req.query; // 'mobile' or 'dth'
+  const { type } = req.query; // service type filter
 
+  const validServiceTypes = ['mobile', 'dth', 'electricity', 'gas', 'water', 'broadband', 'loan', 'insurance', 'landline', 'creditcard', 'postpaid', 'cylinder'];
   const query = { isActive: true };
-  if (type && ['mobile', 'dth'].includes(type)) {
+  if (type && validServiceTypes.includes(type)) {
     query.serviceType = type;
   }
 

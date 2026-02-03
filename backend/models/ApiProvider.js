@@ -70,6 +70,17 @@ const apiProviderSchema = new mongoose.Schema({
       type: String,
       trim: true
     },
+    billPayment: {
+      type: String,
+      trim: true,
+      required: function() {
+        return this.supportedServices && this.supportedServices.some(s => ['electricity','gas','water','broadband','loan','insurance','landline','creditcard','postpaid','cylinder'].includes(s));
+      }
+    },
+    billFetch: {
+      type: String,
+      trim: true
+    },
     // DMT endpoints
     dmtRemitterRegistration: {
       type: String,
@@ -160,7 +171,7 @@ const apiProviderSchema = new mongoose.Schema({
   },
   supportedServices: {
     type: [String],
-    enum: ['mobile', 'dth', 'electricity', 'gas', 'water', 'broadband', 'dmt'],
+    enum: ['mobile', 'dth', 'electricity', 'gas', 'water', 'broadband', 'landline', 'postpaid', 'creditcard', 'loan', 'insurance', 'cylinder', 'dmt'],
     default: ['mobile', 'dth']
   },
   testMode: {

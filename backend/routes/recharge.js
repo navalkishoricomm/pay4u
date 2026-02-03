@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   mobileRecharge,
   dthRecharge,
+  billPayment,
   getRechargeHistory,
   getRechargeStatus,
   getOperators,
@@ -56,6 +57,24 @@ const dthRechargeValidation = [
     .withMessage('Amount must be a positive number')
 ];
 
+// Bill payment validation
+const validServiceTypes = ['electricity', 'water', 'gas', 'broadband', 'loan', 'insurance', 'landline', 'creditcard', 'postpaid', 'cylinder'];
+const billPaymentValidation = [
+  body('serviceType')
+    .isIn(validServiceTypes)
+    .withMessage('Invalid service type'),
+  body('customerNumber')
+    .isLength({ min: 4, max: 20 })
+    .withMessage('Customer number must be 4-20 characters'),
+  body('operator')
+    .notEmpty()
+    .withMessage('Operator is required'),
+  body('amount')
+    .isNumeric()
+    .isFloat({ min: 50, max: 50000 })
+    .withMessage('Amount must be between ₹50 and ₹50,000')
+];
+
 // Routes
 
 // Protected routes
@@ -74,6 +93,11 @@ router.post('/mobile', mobileRechargeValidation, handleValidationErrors, mobileR
 // @desc    Process DTH recharge
 // @access  Private
 router.post('/dth', dthRechargeValidation, handleValidationErrors, dthRecharge);
+
+// @route   POST /api/recharge/bill-payment
+// @desc    Process bill payment for utilities and other services
+// @access  Private
+router.post('/bill-payment', billPaymentValidation, handleValidationErrors, billPayment);
 
 // @route   GET /api/recharge/history
 // @desc    Get recharge history
@@ -95,7 +119,7 @@ router.get('/status/:transactionId', [
 // @desc    Get list of operators
 // @access  Private
 router.get('/operators', [
-  query('type').optional().isIn(['mobile', 'dth']).withMessage('Type must be mobile or dth')
+  query('type').optional().isIn(['mobile', 'dth', 'electricity', 'water', 'gas', 'broadband', 'landline', 'postpaid', 'creditcard', 'loan', 'insurance', 'cylinder']).withMessage('Invalid type')
 ], handleValidationErrors, getOperators);
 
 // @route   GET /api/recharge/circles

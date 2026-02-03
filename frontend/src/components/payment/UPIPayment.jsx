@@ -37,12 +37,12 @@ const UPIPayment = ({ amount, onPaymentComplete, transactionId }) => {
 
   const fetchDefaultBarcode = async () => {
     try {
-      const response = await axios.get('/api/upi-barcodes/default');
+      const response = await axios.get('/upi-barcodes/default');
       setBarcode(response.data.data.barcode);
       
       // Track usage
       if (response.data.data.barcode) {
-        await axios.patch(`/api/upi-barcodes/${response.data.data.barcode._id}`, {
+        await axios.patch(`/upi-barcodes/${response.data.data.barcode._id}`, {
           usageCount: response.data.data.barcode.usageCount + 1,
           lastUsed: new Date()
         });

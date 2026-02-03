@@ -15,5 +15,6 @@ router.get('/me', authController.getMe);
 // Admin only routes
 router.post('/admin/reset-password', authController.restrictTo('admin'), authController.adminResetPassword);
 router.get('/admin/users', authController.restrictTo('admin'), authController.getAllUsers);
+router.patch('/admin/users/:id/feature-permissions', authController.restrictTo('admin'), authController.updateUserFeaturePermissions);
 
 module.exports = router;

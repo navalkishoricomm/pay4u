@@ -7,6 +7,7 @@ const DTHRecharge = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [operators, setOperators] = useState([]);
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -19,7 +20,12 @@ const DTHRecharge = () => {
   const { subscriberId, operator, plan, amount } = formData;
 
   useEffect(() => {
-    fetchWalletData();
+    // Fetch wallet and operators in parallel
+    const init = async () => {
+      await Promise.all([fetchWalletData(), fetchOperators()]);
+      setLoading(false);
+    };
+    init();
   }, []);
 
   const fetchWalletData = async () => {
@@ -29,8 +35,25 @@ const DTHRecharge = () => {
     } catch (error) {
       console.error('Error fetching wallet data:', error);
       toast.error('Failed to load wallet data');
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchOperators = async () => {
+    try {
+      const res = await axios.get('/recharge/operators', { params: { type: 'dth' } });
+      const list = Array.isArray(res.data?.data) ? res.data.data : [];
+      setOperators(list);
+    } catch (error) {
+      console.error('Error fetching DTH operators:', error);
+      toast.error('Failed to load DTH operators');
+      // Fallback to a minimal list if API fails
+      setOperators([
+        { code: 'TATAPLAY', name: 'Tata Play' },
+        { code: 'DISHTV', name: 'Dish TV' },
+        { code: 'AIRTEL_DTH', name: 'Airtel Digital TV' },
+        { code: 'SUN_DIRECT', name: 'Sun Direct' },
+        { code: 'D2H', name: 'd2h' }
+      ]);
     }
   };
 
@@ -46,6 +69,11 @@ const DTHRecharge = () => {
       toast.error('Please fill in all required fields');
       return;
     }
+
+    if (subscriberId.length < 8 || subscriberId.length > 15) {
+      toast.error('Subscriber/Customer ID must be 8-15 characters');
+      return;
+    }
     
     if (parseFloat(amount) <= 0) {
       toast.error('Please enter a valid amount');
@@ -55,35 +83,24 @@ const DTHRecharge = () => {
     setIsProcessing(true);
     
     try {
-      const response = await axios.post('/transactions/process', {
-        type: 'dth-recharge',
-        amount: parseFloat(amount),
-        metadata: {
-          subscriberId,
-          operator,
-          plan
-        }
+      const response = await axios.post('/recharge/dth', {
+        customerNumber: subscriberId,
+        operator,
+        amount: parseFloat(amount)
       });
       
-      toast.success('DTH recharge request submitted for approval');
+      toast.success('DTH recharge request submitted');
       // Refresh wallet balance after successful recharge
       await fetchWalletData();
       navigate('/transactions');
     } catch (error) {
       console.error('Error submitting DTH recharge request:', error);
-      toast.error('Failed to submit DTH recharge request');
+      const msg = error?.response?.data?.message || 'Failed to submit DTH recharge request';
+      toast.error(msg);
     } finally {
       setIsProcessing(false);
     }
   };
-
-  // Sample operators and plans (in a real app, these would come from an API)
-  const operators = [
-    { id: 'tatasky', name: 'Tata Play' },
-    { id: 'dishtv', name: 'Dish TV' },
-    { id: 'airtelDTH', name: 'Airtel Digital TV' },
-    { id: 'sunDirect', name: 'Sun Direct' },
-  ];
 
   const plans = [
     { id: 'plan1', name: 'Basic Pack - ₹299 (1 month)' },
@@ -116,6 +133,8 @@ const DTHRecharge = () => {
               onChange={handleChange}
               className="form-control"
               placeholder="Enter your Subscriber ID / Customer ID"
+              minLength={8}
+              maxLength={15}
               required
             />
           </div>
@@ -132,7 +151,7 @@ const DTHRecharge = () => {
             >
               <option value="">Select an operator</option>
               {operators.map((op) => (
-                <option key={op.id} value={op.id}>
+                <option key={op.code} value={op.code}>
                   {op.name}
                 </option>
               ))}

@@ -25,6 +25,13 @@ class InMemoryDB {
         password: adminPassword,
         phone: '9876543210',
         role: 'admin',
+        featurePermissions: {
+          showRecharges: false,
+          showBillPayments: false,
+          showMoneyTransfer: true,
+          showAEPS: true,
+          showVouchers: true
+        },
         createdAt: new Date(),
         updatedAt: new Date(),
         active: true
@@ -77,6 +84,13 @@ class InMemoryDB {
           password: hashedPassword,
           phone: userData.phone,
           role: userData.role,
+          featurePermissions: {
+            showRecharges: false,
+            showBillPayments: false,
+            showMoneyTransfer: true,
+            showAEPS: true,
+            showVouchers: true
+          },
           createdAt: new Date(),
           updatedAt: new Date(),
           active: true

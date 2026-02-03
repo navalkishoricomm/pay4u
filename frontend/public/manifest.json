@@ -1,0 +1,15 @@
+{
+  "short_name": "Pay4U",
+  "name": "Pay4U Recharge Portal",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "64x64 192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0B5ED7",
+  "background_color": "#ffffff"
+}

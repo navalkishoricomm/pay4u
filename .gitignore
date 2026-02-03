@@ -140,3 +140,6 @@ Thumbs.db
 
 # Backup directories
 /backups/
+
+# Security
+token.txt

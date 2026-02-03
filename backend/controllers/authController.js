@@ -55,7 +55,7 @@ exports.signup = async (req, res) => {
       phone,
       role: 'user',
       featurePermissions: {
-        showRecharges: false,
+        showRecharges: true,
         showBillPayments: false,
         showMoneyTransfer: false,
         showAEPS: false,

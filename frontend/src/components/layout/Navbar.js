@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import {
+  SHOW_RECHARGES,
+  SHOW_BILL_PAYMENTS,
+  SHOW_MONEY_TRANSFER,
+  SHOW_AEPS,
+  SHOW_VOUCHERS
+} from '../../config/featureFlags';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -9,6 +16,39 @@ const Navbar = () => {
   const { unreadCount } = useSocket();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isBellRinging, setIsBellRinging] = useState(false);
+
+  // Effective per-user feature visibility with safe defaults
+  const perms = (currentUser && currentUser.featurePermissions) || {};
+  const normalizeBool = (val, fallback) => {
+    if (val === undefined || val === null) return fallback;
+    if (typeof val === 'string') {
+      const s = val.trim().toLowerCase();
+      if (s === 'true') return true;
+      if (s === 'false') return false;
+    }
+    return !!val;
+  };
+
+  const SHOW_RECHARGES_EFF = normalizeBool(perms.showRecharges, SHOW_RECHARGES);
+  const SHOW_BILL_PAYMENTS_EFF = normalizeBool(perms.showBillPayments, SHOW_BILL_PAYMENTS);
+  const SHOW_MONEY_TRANSFER_EFF = normalizeBool(perms.showMoneyTransfer, SHOW_MONEY_TRANSFER);
+  const SHOW_AEPS_EFF = normalizeBool(perms.showAEPS, SHOW_AEPS);
+  const SHOW_VOUCHERS_EFF = normalizeBool(perms.showVouchers, SHOW_VOUCHERS);
+
+  useEffect(() => {
+    let timer;
+    const handleNewNotification = () => {
+      setIsBellRinging(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setIsBellRinging(false), 1500);
+    };
+    window.addEventListener('newNotification', handleNewNotification);
+    return () => {
+      window.removeEventListener('newNotification', handleNewNotification);
+      clearTimeout(timer);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -52,44 +92,47 @@ const Navbar = () => {
         {isAuthenticated ? (
           <>
             <li>
-              <Link to="/dashboard" onClick={closeMenu}>Dashboard</Link>
+              <NavLink to="/dashboard">Dashboard</NavLink>
             </li>
             <li>
-              <Link to="/wallet" onClick={closeMenu}>Wallet</Link>
+              <NavLink to="/wallet">Wallet</NavLink>
             </li>
+            
+            {SHOW_RECHARGES_EFF && (
+              <>
+                <li><NavLink to="/mobile-recharge">Mobile Recharge</NavLink></li>
+                <li><NavLink to="/dth-recharge">DTH Recharge</NavLink></li>
+              </>
+            )}
+            
+            {SHOW_BILL_PAYMENTS_EFF && (
+              <li><NavLink to="/bill-payment">Bill Payment</NavLink></li>
+            )}
+            
+            {SHOW_MONEY_TRANSFER_EFF && (
+              <li><NavLink to="/money-transfer">Money Transfer</NavLink></li>
+            )}
+            
+            {SHOW_AEPS_EFF && (
+              <li><NavLink to="/aeps">AEPS</NavLink></li>
+            )}
+
             <li>
-              <Link to="/recharge" onClick={closeMenu}>Recharge</Link>
+              <NavLink to="/transactions">Transactions</NavLink>
             </li>
+            
+            {SHOW_VOUCHERS_EFF && (
+              <li>
+                <NavLink to="/vouchers">Brand Vouchers</NavLink>
+              </li>
+            )}
             <li>
-              <Link to="/money-transfer" onClick={closeMenu}>Money Transfer</Link>
-            </li>
-            <li>
-              <Link to="/aeps" onClick={closeMenu}>AEPS</Link>
-            </li>
-            <li>
-              <Link to="/transactions" onClick={closeMenu}>Transactions</Link>
-            </li>
-            <li>
-              <Link to="/vouchers" onClick={closeMenu}>Brand Vouchers</Link>
-            </li>
-            <li>
-              <Link to="/notifications" onClick={closeMenu} className="notification-link">
-                <span className="notification-icon">🔔</span>
-                Notifications
-                {unreadCount > 0 && (
-                  <span className="notification-badge">{unreadCount}</span>
-                )}
-              </Link>
+              <NavLink to="/notifications">Notifications</NavLink>
             </li>
             {currentUser?.role === 'admin' && (
-              <>
-                <li>
-                  <Link to="/admin/notifications" onClick={closeMenu} className="admin-link">Admin Notifications</Link>
-                </li>
-                <li>
-                  <Link to="/admin/dashboard" className="admin-link" onClick={closeMenu}>Admin Panel</Link>
-                </li>
-              </>
+              <li>
+                <NavLink to="/admin/dashboard" className="admin-link">Admin</NavLink>
+              </li>
             )}
             <li>
               <button onClick={handleLogout} className="btn btn-secondary">
@@ -113,7 +156,7 @@ const Navbar = () => {
       {isAuthenticated && (
         <div className="desktop-notifications">
           <Link to="/notifications" className="notification-bell">
-            <span className="bell-icon">🔔</span>
+            <span className={`bell-icon ${isBellRinging ? 'ring' : ''}`}>🔔</span>
             {unreadCount > 0 && (
               <span className="notification-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
             )}

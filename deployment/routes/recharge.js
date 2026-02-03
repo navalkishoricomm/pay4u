@@ -95,7 +95,7 @@ router.get('/status/:transactionId', [
 // @desc    Get list of operators
 // @access  Private
 router.get('/operators', [
-  query('type').optional().isIn(['mobile', 'dth']).withMessage('Type must be mobile or dth')
+  query('type').optional().isIn(['mobile', 'dth', 'electricity', 'water', 'gas', 'broadband', 'landline', 'postpaid', 'creditcard', 'loan', 'insurance', 'cylinder']).withMessage('Invalid type')
 ], handleValidationErrors, getOperators);
 
 // @route   GET /api/recharge/circles

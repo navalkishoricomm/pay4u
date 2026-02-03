@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import './BrandVouchers.css';
+import axios from 'axios';
+
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const BrandVouchers = () => {
   const { currentUser } = useAuth();
@@ -30,7 +33,7 @@ const BrandVouchers = () => {
 
   const fetchVouchers = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/vouchers/brands');
+      const response = await fetch(`${API_BASE}/vouchers/brands`);
       const data = await response.json();
       if (data.success) {
         setVouchers(data.data.filter(voucher => voucher.isActive));
@@ -45,7 +48,7 @@ const BrandVouchers = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/vouchers/categories');
+      const response = await fetch(`${API_BASE}/vouchers/categories`);
       const data = await response.json();
       if (data.success) {
         setCategories(['All', ...data.data]);
@@ -58,7 +61,7 @@ const BrandVouchers = () => {
   const fetchWalletBalance = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/wallet/balance', {
+      const response = await fetch(`${API_BASE}/wallet/balance`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -74,7 +77,7 @@ const BrandVouchers = () => {
 
   const fetchDenominations = async (voucherId) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/vouchers/brands/${voucherId}/denominations`);
+      const response = await fetch(`${API_BASE}/vouchers/brands/${voucherId}/denominations`);
       const data = await response.json();
       if (data.success) {
         // Filter active denominations with available quantity
@@ -96,7 +99,7 @@ const BrandVouchers = () => {
   const fetchUserOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/vouchers/my-orders', {
+      const response = await fetch(`${API_BASE}/vouchers/my-orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -136,7 +139,7 @@ const BrandVouchers = () => {
     setPurchasing(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/vouchers/purchase', {
+      const response = await fetch(`${API_BASE}/vouchers/purchase`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +188,7 @@ const BrandVouchers = () => {
   const handleDownloadVoucher = async (orderId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/vouchers/orders/${orderId}/download-file`, {
+      const response = await fetch(`${API_BASE}/vouchers/orders/${orderId}/download-file`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -372,7 +375,23 @@ const BrandVouchers = () => {
             <div className="modal-body">
               <div className="voucher-details">
                 <div className="voucher-info">
-                  <img src={selectedVoucher.image} alt={selectedVoucher.brandName} />
+                  <img 
+                    src={selectedVoucher.image} 
+                    alt={selectedVoucher.brandName} 
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      // Create a placeholder if image fails
+                      const placeholder = document.createElement('div');
+                      placeholder.innerHTML = '<i class="fas fa-gift" style="font-size: 3rem; color: var(--primary-color);"></i>';
+                      placeholder.style.width = '100%';
+                      placeholder.style.height = '100%';
+                      placeholder.style.display = 'flex';
+                      placeholder.style.alignItems = 'center';
+                      placeholder.style.justifyContent = 'center';
+                      placeholder.style.background = 'var(--light-color)';
+                      e.target.parentElement.insertBefore(placeholder, e.target);
+                    }}
+                  />
                   <div className="info-content">
                     <h4>{selectedVoucher.brandName}</h4>
                     <p>{selectedVoucher.description}</p>
@@ -427,6 +446,17 @@ const BrandVouchers = () => {
                   </div>
                 )}
               </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  setSelectedVoucher(null);
+                  setDenominations([]);
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

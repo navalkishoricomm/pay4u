@@ -18,7 +18,7 @@ const operatorConfigSchema = new mongoose.Schema({
   serviceType: {
     type: String,
     required: [true, 'Service type is required'],
-    enum: ['mobile', 'dth', 'electricity', 'gas', 'water', 'broadband'],
+    enum: ['mobile', 'dth', 'electricity', 'gas', 'water', 'broadband', 'loan', 'insurance', 'landline', 'creditcard', 'postpaid', 'cylinder'],
     lowercase: true
   },
   processingMode: {
@@ -146,6 +146,26 @@ const operatorConfigSchema = new mongoose.Schema({
       type: Map,
       of: mongoose.Schema.Types.Mixed,
       default: new Map()
+    }
+  },
+  // BBPS-specific configuration
+  bbps: {
+    billerId: {
+      type: String,
+      trim: true
+    },
+    category: {
+      type: String,
+      trim: true
+    },
+    parameters: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: new Map()
+    },
+    supportsBillFetch: {
+      type: Boolean,
+      default: false
     }
   },
   statistics: {

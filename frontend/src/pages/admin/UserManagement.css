@@ -240,6 +240,45 @@
   color: #1565c0;
 }
 
+/* Feature Toggles Styles */
+.feature-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.toggle-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3498db;
+}
+
+.toggle-label {
+  font-size: 14px;
+  color: #2c3e50;
+  text-transform: capitalize;
+}
+
+.toggle-item:hover .toggle-label {
+  color: #3498db;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* ... rest of existing styles ... */
+
 .no-users {
   text-align: center;
   padding: 60px 20px;

@@ -31,6 +31,11 @@ const AdminNavbar = () => {
             <i className="fas fa-tachometer-alt"></i> Dashboard
           </Link>
         </li>
+        <li className={isActive('/admin/user-management')}>
+          <Link to="/admin/user-management">
+            <i className="fas fa-users-cog"></i> User Management
+          </Link>
+        </li>
         <li className={isActive('/admin/transactions/pending')}>
           <Link to="/admin/transactions/pending">
             <i className="fas fa-clock"></i> Pending Approvals
@@ -64,6 +69,11 @@ const AdminNavbar = () => {
         <li className={isActive('/admin/voucher-orders')}>
           <Link to="/admin/voucher-orders">
             <i className="fas fa-clipboard-check"></i> Voucher Approvals
+          </Link>
+        </li>
+        <li className={isActive('/admin/notifications')}>
+          <Link to="/admin/notifications">
+            <i className="fas fa-bell"></i> Notifications
           </Link>
         </li>
         <li className={isActive('/admin/charge-slabs')}>

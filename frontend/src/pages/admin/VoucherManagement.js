@@ -294,6 +294,10 @@ const VoucherManagement = () => {
                   src={voucher.image} 
                   alt={voucher.brandName} 
                   style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = `<div style="color: var(--text-secondary); font-size: 0.875rem; text-align: center;"><i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>Image Error</div>`;
+                  }}
                 />
               ) : (
                 <div style={{color: 'var(--text-secondary)', fontSize: '0.875rem', textAlign: 'center'}}>

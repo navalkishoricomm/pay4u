@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema(
       default: 'user',
     },
     featurePermissions: {
-      showRecharges: { type: Boolean, default: false },
+      showRecharges: { type: Boolean, default: true },
       showBillPayments: { type: Boolean, default: false },
       showMoneyTransfer: { type: Boolean, default: false },
       showAEPS: { type: Boolean, default: false },

@@ -4,30 +4,42 @@ const Transaction = require('./models/Transaction');
 const Wallet = require('./models/Wallet');
 const User = require('./models/User');
 
+async function ensureWalletForUser(user, initialBalance = 10000) {
+  let wallet = await Wallet.findOne({ user: user._id });
+  if (!wallet) {
+    console.log(`No wallet found for ${user.email}, creating one with balance ${initialBalance}...`);
+    wallet = await Wallet.create({
+      user: user._id,
+      balance: initialBalance,
+      currency: 'INR',
+      isActive: true
+    });
+    console.log('Wallet created:', wallet._id);
+  }
+  return wallet;
+}
+
 async function testStatusUpdates() {
     try {
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/pay4u');
         console.log('Connected to MongoDB');
         
-        // Find admin user
-        const adminUser = await User.findOne({ email: 'admin@pay4u.com' });
+        // Allow passing email via CLI to test specific user, default to admin
+        const emailArg = process.argv[2] || 'admin@pay4u.com';
+        const adminUser = await User.findOne({ email: emailArg });
         if (!adminUser) {
-            console.log('Admin user not found');
+            console.log(`User not found for email: ${emailArg}`);
             return;
         }
         
-        console.log('Admin User ID:', adminUser._id);
+        console.log('Admin/User ID:', adminUser._id);
         
-        // Find admin's wallet
-        const wallet = await Wallet.findOne({ user: adminUser._id });
-        if (!wallet) {
-            console.log('Admin wallet not found');
-            return;
-        }
+        // Ensure wallet exists
+        const wallet = await ensureWalletForUser(adminUser);
         
-        console.log('Admin Wallet ID:', wallet._id);
+        console.log('Admin/User Wallet ID:', wallet._id);
         
-        // Fetch recent transactions for admin (same logic as the API)
+        // Fetch recent transactions for admin/user (same logic as the API)
         const statusUpdates = await Transaction.find({ 
             wallet: wallet._id 
         })

@@ -7,6 +7,12 @@ const AppError = require('../utils/appError');
 // Create a new notification
 exports.createNotification = async (userId, title, message, type = 'general', relatedTransaction = null, priority = 'medium', sender = null) => {
   try {
+    // Check if MongoDB connection is ready
+    if (mongoose.connection.readyState !== 1) {
+      console.warn('MongoDB not connected, skipping notification creation');
+      return null;
+    }
+
     const notification = await Notification.create({
       user: userId,
       title,
@@ -21,22 +27,50 @@ exports.createNotification = async (userId, title, message, type = 'general', re
     
     // Emit real-time notification if Socket.IO is available
     if (global.io) {
-      const populatedNotification = await Notification.findById(notification._id)
-        .populate('relatedTransaction', 'amount type status reference');
-      
-      // Emit to specific user
-      global.io.to(`user_${userId}`).emit('new_notification', {
-        notification: populatedNotification,
-        unreadCount: await Notification.countDocuments({ user: userId, isRead: false })
-      });
-      
-      console.log(`Real-time notification sent to user ${userId}`);
+      try {
+        const populatedNotification = await Notification.findById(notification._id)
+          .populate('relatedTransaction', 'amount type status reference');
+        
+        const unreadCount = await Notification.countDocuments({ user: userId, isRead: false });
+        
+        // Check if user is connected to their room
+        const userRoom = `user_${userId}`;
+        const connectedSockets = await global.io.in(userRoom).fetchSockets();
+        
+        if (connectedSockets.length > 0) {
+          // Emit to specific user room
+          global.io.to(userRoom).emit('new_notification', {
+            notification: populatedNotification,
+            unreadCount: unreadCount
+          });
+          console.log(`✓ Real-time notification sent to user ${userId} (${connectedSockets.length} connected sockets)`);
+        } else {
+          console.log(`⚠ User ${userId} not connected to Socket.IO, notification saved to database only`);
+        }
+        
+        // Also emit to admin room for monitoring
+        global.io.to('admin_room').emit('notification_created', {
+          userId: userId,
+          title: title,
+          message: message,
+          type: type,
+          timestamp: new Date()
+        });
+        
+      } catch (socketError) {
+        console.error('❌ Failed to send real-time notification:', socketError.message);
+        console.error('Socket error stack:', socketError.stack);
+        // Don't throw error for socket issues, notification was still created
+      }
+    } else {
+      console.warn('⚠ Socket.IO not available, notification saved to database only');
     }
     
     return notification;
   } catch (error) {
     console.error('Failed to create notification:', error.message);
-    throw error;
+    // Don't throw error to prevent breaking the main flow
+    return null;
   }
 };
 
@@ -204,6 +238,11 @@ exports.createSingleNotification = catchAsync(async (req, res, next) => {
   if (!userId || !title || !message) {
     return next(new AppError('User ID, title, and message are required', 400));
   }
+
+  // Check if MongoDB connection is ready
+  if (mongoose.connection.readyState !== 1) {
+    return next(new AppError('Database connection not available', 503));
+  }
   
   const user = await User.findById(userId);
   if (!user) {
@@ -223,6 +262,40 @@ exports.createSingleNotification = catchAsync(async (req, res, next) => {
   
   await notification.populate('user', 'name email');
   await notification.populate('sender', 'name email');
+
+  // Emit real-time notification if Socket.IO is available
+  if (global.io) {
+    try {
+      const unreadCount = await Notification.countDocuments({ user: userId, isRead: false });
+      const userRoom = `user_${userId}`;
+      const connectedSockets = await global.io.in(userRoom).fetchSockets();
+      
+      if (connectedSockets.length > 0) {
+        global.io.to(userRoom).emit('new_notification', {
+          notification,
+          unreadCount: unreadCount
+        });
+        console.log(`✓ Admin notification sent to user ${userId} (${connectedSockets.length} connected sockets)`);
+      } else {
+        console.log(`⚠ User ${userId} not connected to Socket.IO for admin notification`);
+      }
+      
+      // Emit to admin room for monitoring
+      global.io.to('admin_room').emit('admin_notification_sent', {
+        userId: userId,
+        title: title,
+        message: message,
+        sender: req.user.name || req.user.email,
+        timestamp: new Date()
+      });
+      
+    } catch (socketError) {
+      console.error('❌ Failed to send admin real-time notification:', socketError.message);
+      console.error('Socket error stack:', socketError.stack);
+    }
+  } else {
+    console.warn('⚠ Socket.IO not available for admin notification');
+  }
   
   res.status(201).json({
     status: 'success',
@@ -248,6 +321,11 @@ exports.sendBulkNotifications = catchAsync(async (req, res, next) => {
   
   if (!title || !message) {
     return next(new AppError('Title and message are required', 400));
+  }
+
+  // Check if MongoDB connection is ready
+  if (mongoose.connection.readyState !== 1) {
+    return next(new AppError('Database connection not available', 503));
   }
   
   let userIds = [];
