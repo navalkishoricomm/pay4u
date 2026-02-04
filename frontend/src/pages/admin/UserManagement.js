@@ -21,6 +21,25 @@ const UserManagement = () => {
   const [resetting, setResetting] = useState(false);
   const [editingPerms, setEditingPerms] = useState({});
 
+  // Create User State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    role: 'user',
+    pan: '',
+    aadhar: '',
+    kycStatus: 'verified' // Auto-verify if admin creates? Or 'pending'. Let's default to verified for convenience.
+  });
+  const [kycFiles, setKycFiles] = useState({
+    panImage: null,
+    aadharFrontImage: null,
+    aadharBackImage: null
+  });
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -102,12 +121,82 @@ const UserManagement = () => {
     setSelectedUser(null);
     setNewPassword('');
     setError('');
+    setSuccess('');
+  };
+
+  const handleCreateUserChange = (e) => {
+    const { name, value } = e.target;
+    setNewUser(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    if (files && files[0]) {
+      setKycFiles(prev => ({
+        ...prev,
+        [name]: files[0]
+      }));
+    }
+  };
+
+  const handleCreateUserSubmit = async (e) => {
+    e.preventDefault();
+    setCreatingUser(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const formData = new FormData();
+      Object.keys(newUser).forEach(key => {
+        formData.append(key, newUser[key]);
+      });
+      
+      if (kycFiles.panImage) formData.append('panImage', kycFiles.panImage);
+      if (kycFiles.aadharFrontImage) formData.append('aadharFrontImage', kycFiles.aadharFrontImage);
+      if (kycFiles.aadharBackImage) formData.append('aadharBackImage', kycFiles.aadharBackImage);
+
+      // Note: Endpoint is /admin/users/create (via adminRoutes)
+      // Since axios baseURL likely includes /api, we use /admin/users/create
+      const response = await axios.post('/admin/users/create', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setSuccess('User created successfully');
+      setShowCreateModal(false);
+      setNewUser({
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        role: 'user',
+        pan: '',
+        aadhar: '',
+        kycStatus: 'verified'
+      });
+      setKycFiles({
+        panImage: null,
+        aadharFrontImage: null,
+        aadharBackImage: null
+      });
+      fetchUsers(); // Refresh list
+      
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to create user');
+    } finally {
+      setCreatingUser(false);
+    }
   };
 
   const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.phone.includes(searchTerm)
+    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.phone?.includes(searchTerm)
   );
 
   if (loading) {
@@ -152,6 +241,13 @@ const UserManagement = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <button 
+          className="btn btn-primary"
+          onClick={() => setShowCreateModal(true)}
+          style={{ padding: '10px 20px', borderRadius: '25px', display: 'flex', alignItems: 'center', gap: '8px', marginRight: '10px' }}
+        >
+          <i className="fas fa-plus"></i> Add User
+        </button>
         <button className="btn btn-refresh" onClick={fetchUsers}>
           <i className="fas fa-sync-alt"></i>
           Refresh
@@ -322,6 +418,152 @@ const UserManagement = () => {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3>Create New User</h3>
+            <form onSubmit={handleCreateUserSubmit}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div className="form-group">
+                  <label>Name*</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={newUser.name}
+                    onChange={handleCreateUserChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email*</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={newUser.email}
+                    onChange={handleCreateUserChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Phone*</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={newUser.phone}
+                    onChange={handleCreateUserChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Password*</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={newUser.password}
+                    onChange={handleCreateUserChange}
+                    required
+                    minLength="8"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Role</label>
+                  <select
+                    name="role"
+                    value={newUser.role}
+                    onChange={handleCreateUserChange}
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+
+              <h4 style={{ marginTop: '20px', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>KYC Details (Optional)</h4>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div className="form-group">
+                  <label>PAN Number</label>
+                  <input
+                    type="text"
+                    name="pan"
+                    value={newUser.pan}
+                    onChange={handleCreateUserChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Aadhar Number</label>
+                  <input
+                    type="text"
+                    name="aadhar"
+                    value={newUser.aadhar}
+                    onChange={handleCreateUserChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>PAN Image</label>
+                  <input
+                    type="file"
+                    name="panImage"
+                    onChange={handleFileChange}
+                    accept="image/*,application/pdf"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Aadhar Front Image</label>
+                  <input
+                    type="file"
+                    name="aadharFrontImage"
+                    onChange={handleFileChange}
+                    accept="image/*,application/pdf"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Aadhar Back Image</label>
+                  <input
+                    type="file"
+                    name="aadharBackImage"
+                    onChange={handleFileChange}
+                    accept="image/*,application/pdf"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>KYC Status</label>
+                  <select
+                    name="kycStatus"
+                    value={newUser.kycStatus}
+                    onChange={handleCreateUserChange}
+                  >
+                    <option value="not_submitted">Not Submitted</option>
+                    <option value="pending">Pending</option>
+                    <option value="verified">Verified</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="modal-actions" style={{ marginTop: '30px' }}>
+                <button 
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={creatingUser}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={creatingUser}
+                >
+                  {creatingUser ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
