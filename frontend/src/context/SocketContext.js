@@ -21,9 +21,17 @@ export const SocketProvider = ({ children }) => {
 
   // Production-ready socket URL configuration
   const getSocketURL = () => {
-    if (process.env.NODE_ENV === 'production') {
-      return 'https://pay4u.co.in';
+    // If explicitly defined in env, use it
+    if (process.env.REACT_APP_SOCKET_URL) {
+      return process.env.REACT_APP_SOCKET_URL;
     }
+    
+    if (process.env.NODE_ENV === 'production') {
+      // In production, use the same origin as the frontend (relative path)
+      // This assumes Nginx proxies /socket.io to the backend
+      return window.location.origin;
+    }
+    
     return process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5001';
   };
 
