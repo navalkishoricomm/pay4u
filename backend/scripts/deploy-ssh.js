@@ -46,27 +46,27 @@ async function deploy() {
             console.log('Note on mkdir:', e.message);
         }
 
-        // Upload backend
-        console.log('Uploading backend files...');
-        // We filter out node_modules, .git, .env (security), logs, and coverage
-        const filter = (itemPath, isDir) => {
-            const basename = path.basename(itemPath);
-            if (basename === 'node_modules') return false;
-            if (basename === '.git') return false;
-            if (basename === '.env') return false;
-            if (basename === 'logs') return false;
-            if (basename === 'coverage') return false;
-            if (basename === 'dist') return false;
-            return true;
-        };
-        
         const remoteBackendDir = path.join(config.remoteDir, 'backend').replace(/\\/g, '/');
+
+        // Upload backend
+        console.log(`Backend uploading to ${remoteBackendDir}...`);
         
         try {
              await sftp.mkdir(remoteBackendDir, true);
         } catch (e) {}
 
-        await sftp.uploadDir(backendDir, remoteBackendDir, { filter });
+        await sftp.uploadDir(backendDir, remoteBackendDir, { 
+            filter: (itemPath, isDir) => {
+                const basename = path.basename(itemPath);
+                if (basename === 'node_modules') return false;
+                if (basename === '.git') return false;
+                if (basename === '.env') return false;
+                if (basename === 'logs') return false;
+                if (basename === 'coverage') return false;
+                if (basename === 'dist') return false;
+                return true;
+            }
+        });
         console.log('Backend uploaded.');
 
         // Upload frontend build
@@ -110,7 +110,8 @@ async function deploy() {
                     stream.on('close', (code, signal) => {
                         console.log('Remote command exited with code ' + code);
                         ssh.end();
-                        resolve();
+                        if (code === 0) resolve();
+                        else reject(new Error(`Remote command failed with code ${code}`));
                     }).on('data', (data) => {
                         process.stdout.write('REMOTE: ' + data);
                     }).stderr.on('data', (data) => {
@@ -123,11 +124,13 @@ async function deploy() {
         });
 
         console.log('Deployment completed successfully!');
+        process.exit(0);
 
     } catch (err) {
         console.error('Deployment failed:', err);
         try { sftp.end(); } catch(e) {}
         try { ssh.end(); } catch(e) {}
+        process.exit(1);
     }
 }
 

@@ -10,6 +10,10 @@
     "build": "echo \"Backend build completed\"",
     "create-admin": "node scripts/createAdmin.js",
     "deploy": "node scripts/deploy-ssh.js",
+    "setup-server": "node scripts/setup-server.js",
+    "diagnose": "node scripts/diagnose-server.js",
+    "configure-env": "node scripts/configure-env.js",
+    "verify-deployment": "node scripts/verify-deployment.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

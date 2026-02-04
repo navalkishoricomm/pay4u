@@ -21,35 +21,40 @@ const connectDB = async () => {
 const createAdminUser = async () => {
   try {
     // Check if admin already exists
-    const existingAdmin = await User.findOne({ role: 'admin' });
+    const targetEmail = 'admin@pay4u.co.in';
+    const existingAdmin = await User.findOne({ email: targetEmail });
+    
     if (existingAdmin) {
-      console.log('⚠️  Admin user already exists:', existingAdmin.email);
-      return;
+      console.log('⚠️  Admin user found, updating password...');
+      existingAdmin.password = 'Radhey@6615';
+      existingAdmin.role = 'admin'; // Ensure role is admin
+      await existingAdmin.save();
+      console.log('✅ Admin password updated successfully!');
+    } else {
+      // Admin user details
+      const adminData = {
+        name: 'Admin User',
+        email: targetEmail,
+        password: 'Radhey@6615',
+        phone: '9999999999',
+        role: 'admin'
+      };
+
+      // Create admin user
+      const adminUser = await User.create(adminData);
+      console.log('✅ Admin user created successfully!');
+      
+      // Create wallet for admin user
+      const adminWallet = await Wallet.create({
+        user: adminUser._id,
+        balance: 0,
+        transactions: []
+      });
+      console.log('💰 Admin wallet created with ID:', adminWallet._id);
     }
-
-    // Admin user details
-    const adminData = {
-      name: 'Admin User',
-      email: 'admin@pay4u.com',
-      password: 'Admin@123456', // Change this to a secure password
-      phone: '9999999999',
-      role: 'admin'
-    };
-
-    // Create admin user
-    const adminUser = await User.create(adminData);
-    console.log('✅ Admin user created successfully!');
-    console.log('📧 Email:', adminUser.email);
-    console.log('🔑 Password: Admin@123456');
-    console.log('⚠️  Please change the password after first login!');
-
-    // Create wallet for admin user
-    const adminWallet = await Wallet.create({
-      user: adminUser._id,
-      balance: 0,
-      transactions: []
-    });
-    console.log('💰 Admin wallet created with ID:', adminWallet._id);
+    
+    console.log('📧 Email:', targetEmail);
+    console.log('🔑 Password: Radhey@6615');
 
   } catch (error) {
     console.error('❌ Error creating admin user:', error.message);
@@ -64,8 +69,8 @@ const main = async () => {
   
   console.log('✅ Admin creation process completed!');
   console.log('\n📋 Admin Login Details:');
-  console.log('   Email: admin@pay4u.com');
-  console.log('   Password: Admin@123456');
+  console.log('   Email: admin@pay4u.co.in');
+  console.log('   Password: Radhey@6615');
   console.log('   ⚠️  IMPORTANT: Change password after first login!');
   
   process.exit(0);

@@ -44,6 +44,18 @@ const userSchema = new mongoose.Schema(
       showAEPS: { type: Boolean, default: false },
       showVouchers: { type: Boolean, default: true }
     },
+    kyc: {
+      pan: { type: String },
+      aadhar: { type: String },
+      panImage: { type: String },
+      aadharFrontImage: { type: String },
+      aadharBackImage: { type: String },
+      status: {
+        type: String,
+        enum: ['pending', 'verified', 'rejected', 'not_submitted'],
+        default: 'not_submitted'
+      }
+    },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,

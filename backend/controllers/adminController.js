@@ -577,6 +577,137 @@ exports.bulkRejectTransactions = async (req, res) => {
   }
 };
 
+// Create new user (Admin only)
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email, password, phone, role, pan, aadhar, kycStatus } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Process KYC files
+    const kycData = {
+      pan: pan || '',
+      aadhar: aadhar || '',
+      status: kycStatus || 'not_submitted'
+    };
+
+    if (req.files) {
+      if (req.files.panImage && req.files.panImage[0]) {
+        kycData.panImage = req.files.panImage[0].path.replace(/\\/g, '/');
+      }
+      if (req.files.aadharFrontImage && req.files.aadharFrontImage[0]) {
+        kycData.aadharFrontImage = req.files.aadharFrontImage[0].path.replace(/\\/g, '/');
+      }
+      if (req.files.aadharBackImage && req.files.aadharBackImage[0]) {
+        kycData.aadharBackImage = req.files.aadharBackImage[0].path.replace(/\\/g, '/');
+      }
+    }
+
+    // Create user
+    const newUser = await User.create({
+      name,
+      email,
+      password, // User model will hash this
+      phone,
+      role: role || 'user',
+      kyc: kycData,
+      // Set default feature permissions for new user
+      featurePermissions: {
+        showRecharges: true,
+        showBillPayments: false,
+        showMoneyTransfer: false,
+        showAEPS: false,
+        showVouchers: true
+      }
+    });
+
+    // Create wallet for the new user
+    await Wallet.create({
+      user: newUser._id,
+      balance: 0
+    });
+
+    console.log(`User created successfully by admin: ${newUser.email}`);
+
+    // Remove password from output
+    newUser.password = undefined;
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        user: newUser
+      }
+    });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
+
+// Update user KYC (Admin only)
+exports.updateUserKyc = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { pan, aadhar, kycStatus } = req.body;
+    
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'User not found'
+      });
+    }
+
+    // Initialize kyc object if it doesn't exist
+    if (!user.kyc) {
+      user.kyc = {};
+    }
+
+    // Update fields if provided
+    if (pan) user.kyc.pan = pan;
+    if (aadhar) user.kyc.aadhar = aadhar;
+    if (kycStatus) user.kyc.status = kycStatus;
+
+    // Update files if provided
+    if (req.files) {
+      if (req.files.panImage && req.files.panImage[0]) {
+        user.kyc.panImage = req.files.panImage[0].path.replace(/\\/g, '/');
+      }
+      if (req.files.aadharFrontImage && req.files.aadharFrontImage[0]) {
+        user.kyc.aadharFrontImage = req.files.aadharFrontImage[0].path.replace(/\\/g, '/');
+      }
+      if (req.files.aadharBackImage && req.files.aadharBackImage[0]) {
+        user.kyc.aadharBackImage = req.files.aadharBackImage[0].path.replace(/\\/g, '/');
+      }
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user KYC:', error);
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
+
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
