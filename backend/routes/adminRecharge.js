@@ -376,6 +376,9 @@ router.patch('/manual-transactions/:transactionId/approve',
       .withMessage('Status is required')
       .isIn(['success', 'failed'])
       .withMessage('Status must be success or failed'),
+    body('operatorRefId')
+      .optional()
+      .trim(),
     body('remarks')
       .optional()
       .isLength({ max: 500 })

@@ -32,7 +32,7 @@ const UserManagement = () => {
     role: 'user',
     pan: '',
     aadhar: '',
-    kycStatus: 'verified' // Auto-verify if admin creates? Or 'pending'. Let's default to verified for convenience.
+    kycStatus: 'verified' // Default to verified for admin creation
   });
   const [kycFiles, setKycFiles] = useState({
     panImage: null,
@@ -158,8 +158,6 @@ const UserManagement = () => {
       if (kycFiles.aadharFrontImage) formData.append('aadharFrontImage', kycFiles.aadharFrontImage);
       if (kycFiles.aadharBackImage) formData.append('aadharBackImage', kycFiles.aadharBackImage);
 
-      // Note: Endpoint is /admin/users/create (via adminRoutes)
-      // Since axios baseURL likely includes /api, we use /admin/users/create
       const response = await axios.post('/admin/users/create', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -244,7 +242,6 @@ const UserManagement = () => {
         <button 
           className="btn btn-primary"
           onClick={() => setShowCreateModal(true)}
-          style={{ padding: '10px 20px', borderRadius: '25px', display: 'flex', alignItems: 'center', gap: '8px', marginRight: '10px' }}
         >
           <i className="fas fa-plus"></i> Add User
         </button>
@@ -292,7 +289,6 @@ const UserManagement = () => {
                         <input
                           type="checkbox"
                           className="form-check-input"
-                          style={{ opacity: 1, visibility: 'visible', display: 'block', width: '16px', height: '16px', margin: '0 5px 0 0' }}
                           checked={!!editingPerms[user._id]?.[key]}
                           onChange={(e) => {
                             const value = e.target.checked;
@@ -324,7 +320,6 @@ const UserManagement = () => {
                           setError(err.response?.data?.message || 'Failed to update features');
                         }
                       }}
-                      style={{ marginTop: '0.5rem' }}
                     >Save</button>
                   </div>
                 </td>
@@ -333,8 +328,7 @@ const UserManagement = () => {
                   <button
                     className="btn btn-reset"
                     onClick={() => openResetModal(user)}
-                    disabled={user.role === 'admin'}
-                    title={user.role === 'admin' ? 'Cannot reset admin password' : 'Reset password'}
+                    title="Reset password"
                   >
                     <i className="fas fa-key"></i>
                     Reset Password
@@ -375,6 +369,13 @@ const UserManagement = () => {
                 </div>
               </div>
 
+              {selectedUser?.role === 'admin' && (
+                <div className="alert alert-warning mt-2">
+                  <i className="fas fa-exclamation-triangle"></i>
+                  You are resetting an admin password. Confirm this action before proceeding.
+                </div>
+              )}
+
               <div className="form-group">
                 <label htmlFor="newPassword">New Password</label>
                 <input
@@ -402,7 +403,13 @@ const UserManagement = () => {
               </button>
               <button 
                 className="btn btn-danger" 
-                onClick={handleResetPassword}
+                onClick={async () => {
+                  if (selectedUser?.role === 'admin') {
+                    const proceed = window.confirm('You are about to reset an admin password. Do you want to continue?');
+                    if (!proceed) return;
+                  }
+                  await handleResetPassword();
+                }}
                 disabled={resetting || !newPassword || newPassword.length < 8}
               >
                 {resetting ? (
@@ -425,145 +432,163 @@ const UserManagement = () => {
       {/* Create User Modal */}
       {showCreateModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3>Create New User</h3>
-            <form onSubmit={handleCreateUserSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div className="form-group">
-                  <label>Name*</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={newUser.name}
-                    onChange={handleCreateUserChange}
-                    required
-                  />
+          <div className="modal large">
+            <div className="modal-header">
+              <h3>Create New User</h3>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleCreateUserSubmit}>
+                <div className="grid-2">
+                  <div className="form-group">
+                    <label>Name*</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      name="name"
+                      value={newUser.name}
+                      onChange={handleCreateUserChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email*</label>
+                    <input
+                      className="form-control"
+                      type="email"
+                      name="email"
+                      value={newUser.email}
+                      onChange={handleCreateUserChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Phone*</label>
+                    <input
+                      className="form-control"
+                      type="tel"
+                      name="phone"
+                      value={newUser.phone}
+                      onChange={handleCreateUserChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Password*</label>
+                    <input
+                      className="form-control"
+                      type="password"
+                      name="password"
+                      value={newUser.password}
+                      onChange={handleCreateUserChange}
+                      required
+                      minLength="8"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Role</label>
+                    <select
+                      className="form-select"
+                      name="role"
+                      value={newUser.role}
+                      onChange={handleCreateUserChange}
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>Email*</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={newUser.email}
-                    onChange={handleCreateUserChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Phone*</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={newUser.phone}
-                    onChange={handleCreateUserChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Password*</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={newUser.password}
-                    onChange={handleCreateUserChange}
-                    required
-                    minLength="8"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Role</label>
-                  <select
-                    name="role"
-                    value={newUser.role}
-                    onChange={handleCreateUserChange}
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-              </div>
 
-              <h4 style={{ marginTop: '20px', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>KYC Details (Optional)</h4>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div className="form-group">
-                  <label>PAN Number</label>
-                  <input
-                    type="text"
-                    name="pan"
-                    value={newUser.pan}
-                    onChange={handleCreateUserChange}
-                  />
+                <div className="section-divider">KYC Details (Optional)</div>
+                
+                <div className="grid-2">
+                  <div className="form-group">
+                    <label>PAN Number</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      name="pan"
+                      value={newUser.pan}
+                      onChange={handleCreateUserChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Aadhar Number</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      name="aadhar"
+                      value={newUser.aadhar}
+                      onChange={handleCreateUserChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>PAN Image</label>
+                    <input
+                      className="form-control"
+                      type="file"
+                      name="panImage"
+                      onChange={handleFileChange}
+                      accept="image/*,application/pdf"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Aadhar Front Image</label>
+                    <input
+                      className="form-control"
+                      type="file"
+                      name="aadharFrontImage"
+                      onChange={handleFileChange}
+                      accept="image/*,application/pdf"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Aadhar Back Image</label>
+                    <input
+                      className="form-control"
+                      type="file"
+                      name="aadharBackImage"
+                      onChange={handleFileChange}
+                      accept="image/*,application/pdf"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>KYC Status</label>
+                    <select
+                      className="form-select"
+                      name="kycStatus"
+                      value={newUser.kycStatus}
+                      onChange={handleCreateUserChange}
+                    >
+                      <option value="not_submitted">Not Submitted</option>
+                      <option value="pending">Pending</option>
+                      <option value="verified">Verified</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>Aadhar Number</label>
-                  <input
-                    type="text"
-                    name="aadhar"
-                    value={newUser.aadhar}
-                    onChange={handleCreateUserChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>PAN Image</label>
-                  <input
-                    type="file"
-                    name="panImage"
-                    onChange={handleFileChange}
-                    accept="image/*,application/pdf"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Aadhar Front Image</label>
-                  <input
-                    type="file"
-                    name="aadharFrontImage"
-                    onChange={handleFileChange}
-                    accept="image/*,application/pdf"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Aadhar Back Image</label>
-                  <input
-                    type="file"
-                    name="aadharBackImage"
-                    onChange={handleFileChange}
-                    accept="image/*,application/pdf"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>KYC Status</label>
-                  <select
-                    name="kycStatus"
-                    value={newUser.kycStatus}
-                    onChange={handleCreateUserChange}
-                  >
-                    <option value="not_submitted">Not Submitted</option>
-                    <option value="pending">Pending</option>
-                    <option value="verified">Verified</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                </div>
-              </div>
 
-              <div className="modal-actions" style={{ marginTop: '30px' }}>
-                <button 
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowCreateModal(false)}
-                  disabled={creatingUser}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={creatingUser}
-                >
-                  {creatingUser ? 'Creating...' : 'Create User'}
-                </button>
-              </div>
-            </form>
+                <div className="modal-footer transparent">
+                  <button 
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowCreateModal(false)}
+                    disabled={creatingUser}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={creatingUser}
+                  >
+                    {creatingUser ? 'Creating...' : 'Create User'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

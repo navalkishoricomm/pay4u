@@ -369,7 +369,7 @@ exports.getPendingManualTransactions = catchAsync(async (req, res, next) => {
   const { page = 1, limit = 10 } = req.query;
   
   const transactions = await Transaction.find({
-    status: 'pending',
+    status: { $in: ['pending', 'awaiting_approval'] },
     processingMode: 'manual',
     type: { $in: ['mobile-recharge', 'dth-recharge'] }
   })
@@ -380,7 +380,7 @@ exports.getPendingManualTransactions = catchAsync(async (req, res, next) => {
     .skip((page - 1) * limit);
   
   const total = await Transaction.countDocuments({
-    status: 'pending',
+    status: { $in: ['pending', 'awaiting_approval'] },
     processingMode: 'manual',
     type: { $in: ['mobile-recharge', 'dth-recharge'] }
   });
@@ -398,7 +398,7 @@ exports.getPendingManualTransactions = catchAsync(async (req, res, next) => {
 
 exports.approveManualTransaction = catchAsync(async (req, res, next) => {
   const { transactionId } = req.params;
-  const { status, remarks } = req.body;
+  const { status, remarks, operatorRefId } = req.body;
   
   if (!['success', 'failed'].includes(status)) {
     return next(new AppError('Invalid status. Must be success or failed', 400));
@@ -410,12 +410,15 @@ exports.approveManualTransaction = catchAsync(async (req, res, next) => {
     return next(new AppError('Transaction not found', 404));
   }
   
-  if (transaction.status !== 'pending') {
+  if (!['pending', 'awaiting_approval'].includes(transaction.status)) {
     return next(new AppError('Transaction is not pending approval', 400));
   }
   
   transaction.status = status;
   transaction.adminRemarks = remarks;
+  if (operatorRefId) {
+    transaction.apiTransactionId = operatorRefId;
+  }
   transaction.processedAt = new Date();
   transaction.processedBy = req.user.id;
   

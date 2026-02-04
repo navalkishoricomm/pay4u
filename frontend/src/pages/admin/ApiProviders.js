@@ -212,7 +212,13 @@ const ApiProviders = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -223,51 +229,67 @@ const ApiProviders = () => {
           className="btn btn-primary"
           onClick={() => setShowModal(true)}
         >
+          <i className="fas fa-plus me-2"></i>
           Add New Provider
         </button>
       </div>
 
-      <div className="providers-grid">
+      <div className="charts-grid">
         {Array.isArray(providers) && providers.length > 0 ? (
           providers.map(provider => (
-            <div key={provider._id} className="provider-card">
-            <div className="provider-header">
-              <h3>{provider.name}</h3>
-              <div className="provider-status">
-                <span className={`status ${provider.isActive ? 'active' : 'inactive'}`}>
-                  {provider.isActive ? 'Active' : 'Inactive'}
-                </span>
-                {provider.isTestMode && <span className="test-mode">Test Mode</span>}
+            <div key={provider._id} className="chart-card d-flex flex-column h-100">
+              <div className="d-flex justify-content-between align-items-start mb-3">
+                <h3 className="h5 mb-0 text-primary">{provider.displayName || provider.name}</h3>
+                <div className="d-flex flex-column align-items-end gap-1">
+                  <span className={`badge ${provider.isActive ? 'bg-success' : 'bg-danger'}`}>
+                    {provider.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  {provider.testMode && <span className="badge bg-warning text-dark">Test Mode</span>}
+                </div>
+              </div>
+              
+              <div className="flex-grow-1 mb-3">
+                <p className="mb-1 text-muted small"><strong>Base URL:</strong></p>
+                <p className="text-break mb-2 small">{provider.baseUrl}</p>
+                
+                <div className="row g-2 small">
+                  <div className="col-6">
+                    <p className="mb-0"><strong>Priority:</strong> {provider.priority}</p>
+                  </div>
+                  <div className="col-6">
+                    <p className="mb-0"><strong>Commission:</strong> {provider.commission}%</p>
+                  </div>
+                  <div className="col-12">
+                    <p className="mb-0"><strong>Services:</strong> {provider.supportedServices.join(', ')}</p>
+                  </div>
+                  <div className="col-12">
+                    <p className="mb-0"><strong>Range:</strong> ₹{provider.minAmount} - ₹{provider.maxAmount}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="d-flex gap-2 mt-auto pt-3 border-top">
+                <button 
+                  className="btn btn-sm btn-outline-primary flex-grow-1"
+                  onClick={() => handleEdit(provider)}
+                >
+                  <i className="fas fa-edit me-1"></i> Edit
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline-danger flex-grow-1"
+                  onClick={() => handleDelete(provider._id)}
+                >
+                  <i className="fas fa-trash me-1"></i> Delete
+                </button>
               </div>
             </div>
-            
-            <div className="provider-details">
-              <p><strong>Base URL:</strong> {provider.baseUrl}</p>
-              <p><strong>Priority:</strong> {provider.priority}</p>
-              <p><strong>Commission:</strong> {provider.commission}%</p>
-              <p><strong>Services:</strong> {provider.supportedServices.join(', ')}</p>
-              <p><strong>Amount Range:</strong> ₹{provider.minAmount} - ₹{provider.maxAmount}</p>
-            </div>
-            
-            <div className="provider-actions">
-              <button 
-                className="btn btn-secondary"
-                onClick={() => handleEdit(provider)}
-              >
-                Edit
-              </button>
-              <button 
-                className="btn btn-danger"
-                onClick={() => handleDelete(provider._id)}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))
+          ))
         ) : (
-          <div className="no-providers">
-            <p>No API providers configured yet.</p>
+          <div className="col-12 text-center py-5">
+            <div className="text-muted mb-3">
+              <i className="fas fa-server fa-3x mb-3"></i>
+              <p className="h5">No API providers configured yet.</p>
+            </div>
             <button 
               className="btn btn-primary"
               onClick={() => setShowModal(true)}
@@ -278,297 +300,311 @@ const ApiProviders = () => {
         )}
       </div>
 
+      {/* Bootstrap Modal */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>{editingProvider ? 'Edit Provider' : 'Add New Provider'}</h2>
-              <button 
-                className="close-btn"
-                onClick={() => {
-                  setShowModal(false);
-                  resetForm();
-                }}
-              >
-                ×
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="provider-form">
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Provider Name (Internal)</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="e.g., provider_api_v1"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Display Name</label>
-                  <input
-                    type="text"
-                    name="displayName"
-                    value={formData.displayName}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="e.g., Provider API Service"
-                  />
-                </div>
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+          <div className="modal-dialog modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">{editingProvider ? 'Edit Provider' : 'Add New Provider'}</h5>
+                <button 
+                  type="button" 
+                  className="btn-close"
+                  onClick={() => {
+                    setShowModal(false);
+                    resetForm();
+                  }}
+                ></button>
               </div>
               
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Base URL</label>
-                  <input
-                    type="url"
-                    name="baseUrl"
-                    value={formData.baseUrl}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Auth Type</label>
-                  <select
-                    name="authType"
-                    value={formData.authType}
-                    onChange={handleInputChange}
-                  >
-                    <option value="bearer">Bearer Token</option>
-                    <option value="basic">Basic Auth</option>
-                    <option value="api_key">API Key</option>
-                    <option value="custom">Custom</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label>API Key</label>
-                  <input
-                    type="text"
-                    name="apiKey"
-                    value={formData.apiKey}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>API Secret</label>
-                  <input
-                    type="password"
-                    name="apiSecret"
-                    value={formData.apiSecret}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="form-section">
-                <h3>Endpoints</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Mobile Recharge Endpoint</label>
-                    <input
-                      type="text"
-                      name="endpoints.mobileRecharge"
-                      value={formData.endpoints.mobileRecharge}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="/api/mobile-recharge"
-                    />
-                  </div>
+              <div className="modal-body">
+                <form onSubmit={handleSubmit} id="providerForm">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Provider Name (Internal)</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="e.g., provider_api_v1"
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Display Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="displayName"
+                        value={formData.displayName}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="e.g., Provider API Service"
+                      />
+                    </div>
                   
-                  <div className="form-group">
-                    <label>DTH Recharge Endpoint</label>
-                    <input
-                      type="text"
-                      name="endpoints.dthRecharge"
-                      value={formData.endpoints.dthRecharge}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="/api/dth-recharge"
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Status Check Endpoint</label>
-                    <input
-                      type="text"
-                      name="endpoints.checkStatus"
-                      value={formData.endpoints.checkStatus}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="/api/check-status"
-                    />
-                  </div>
+                    <div className="col-md-8">
+                      <label className="form-label">Base URL</label>
+                      <input
+                        type="url"
+                        className="form-control"
+                        name="baseUrl"
+                        value={formData.baseUrl}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="col-md-4">
+                      <label className="form-label">Auth Type</label>
+                      <select
+                        className="form-select"
+                        name="authType"
+                        value={formData.authType}
+                        onChange={handleInputChange}
+                      >
+                        <option value="bearer">Bearer Token</option>
+                        <option value="basic">Basic Auth</option>
+                        <option value="api_key">API Key</option>
+                        <option value="custom">Custom</option>
+                      </select>
+                    </div>
                   
-                  <div className="form-group">
-                    <label>Get Operators Endpoint</label>
-                    <input
-                      type="text"
-                      name="endpoints.getOperators"
-                      value={formData.endpoints.getOperators}
-                      onChange={handleInputChange}
-                      placeholder="/api/operators"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Priority</label>
-                  <input
-                    type="number"
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleInputChange}
-                    min="1"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Commission (%)</label>
-                  <input
-                    type="number"
-                    name="commission"
-                    value={formData.commission}
-                    onChange={handleInputChange}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Timeout (ms)</label>
-                  <input
-                    type="number"
-                    name="timeout"
-                    value={formData.timeout}
-                    onChange={handleInputChange}
-                    min="1000"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Min Amount</label>
-                  <input
-                    type="number"
-                    name="minAmount"
-                    value={formData.minAmount}
-                    onChange={handleInputChange}
-                    min="1"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Max Amount</label>
-                  <input
-                    type="number"
-                    name="maxAmount"
-                    value={formData.maxAmount}
-                    onChange={handleInputChange}
-                    min="1"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Supported Services (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="supportedServices"
-                    value={formData.supportedServices.join(', ')}
-                    onChange={handleInputChange}
-                    placeholder="mobile, dth"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-section">
-                <h3>Response Codes</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Success Codes (comma-separated)</label>
-                    <input
-                      type="text"
-                      name="successCodes"
-                      value={formData.successCodes.join(', ')}
-                      onChange={handleInputChange}
-                      placeholder="200, SUCCESS, ACCEPTED"
-                    />
-                  </div>
+                    <div className="col-md-6">
+                      <label className="form-label">API Key</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="apiKey"
+                        value={formData.apiKey}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">API Secret</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        name="apiSecret"
+                        value={formData.apiSecret}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
                   
-                  <div className="form-group">
-                    <label>Failure Codes (comma-separated)</label>
-                    <input
-                      type="text"
-                      name="failureCodes"
-                      value={formData.failureCodes.join(', ')}
-                      onChange={handleInputChange}
-                      placeholder="FAILED, ERROR, REJECTED"
-                    />
+                    <div className="col-12 mt-4">
+                      <h6 className="border-bottom pb-2">Endpoints</h6>
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Mobile Recharge Endpoint</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="endpoints.mobileRecharge"
+                        value={formData.endpoints.mobileRecharge}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="/api/mobile-recharge"
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">DTH Recharge Endpoint</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="endpoints.dthRecharge"
+                        value={formData.endpoints.dthRecharge}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="/api/dth-recharge"
+                      />
+                    </div>
+                  
+                    <div className="col-md-6">
+                      <label className="form-label">Status Check Endpoint</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="endpoints.checkStatus"
+                        value={formData.endpoints.checkStatus}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="/api/check-status"
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Get Operators Endpoint</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="endpoints.getOperators"
+                        value={formData.endpoints.getOperators}
+                        onChange={handleInputChange}
+                        placeholder="/api/operators"
+                      />
+                    </div>
+                  
+                    <div className="col-12 mt-4">
+                      <h6 className="border-bottom pb-2">Configuration</h6>
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label">Priority</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="priority"
+                        value={formData.priority}
+                        onChange={handleInputChange}
+                        min="1"
+                      />
+                    </div>
+                    
+                    <div className="col-md-4">
+                      <label className="form-label">Commission (%)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="commission"
+                        value={formData.commission}
+                        onChange={handleInputChange}
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    
+                    <div className="col-md-4">
+                      <label className="form-label">Timeout (ms)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="timeout"
+                        value={formData.timeout}
+                        onChange={handleInputChange}
+                        min="1000"
+                      />
+                    </div>
+                  
+                    <div className="col-md-6">
+                      <label className="form-label">Min Amount</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="minAmount"
+                        value={formData.minAmount}
+                        onChange={handleInputChange}
+                        min="1"
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Max Amount</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="maxAmount"
+                        value={formData.maxAmount}
+                        onChange={handleInputChange}
+                        min="1"
+                      />
+                    </div>
+                  
+                    <div className="col-12">
+                      <label className="form-label">Supported Services (comma-separated)</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="supportedServices"
+                        value={formData.supportedServices.join(', ')}
+                        onChange={handleInputChange}
+                        placeholder="mobile, dth"
+                      />
+                    </div>
+                  
+                    <div className="col-12 mt-4">
+                      <h6 className="border-bottom pb-2">Response Codes</h6>
+                    </div>
+
+                    <div className="col-md-6">
+                      <label className="form-label">Success Codes</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="successCodes"
+                        value={formData.successCodes.join(', ')}
+                        onChange={handleInputChange}
+                        placeholder="200, SUCCESS, ACCEPTED"
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">Failure Codes</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="failureCodes"
+                        value={formData.failureCodes.join(', ')}
+                        onChange={handleInputChange}
+                        placeholder="FAILED, ERROR, REJECTED"
+                      />
+                    </div>
+                    
+                    <div className="col-12">
+                      <label className="form-label">Pending Codes</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="pendingCodes"
+                        value={formData.pendingCodes.join(', ')}
+                        onChange={handleInputChange}
+                        placeholder="PENDING, PROCESSING, IN_PROGRESS"
+                      />
+                    </div>
+                  
+                    <div className="col-12 mt-3">
+                      <div className="d-flex gap-4">
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            name="isActive"
+                            checked={formData.isActive}
+                            onChange={handleInputChange}
+                            id="isActiveCheck"
+                          />
+                          <label className="form-check-label" htmlFor="isActiveCheck">
+                            Active
+                          </label>
+                        </div>
+                        
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            name="testMode"
+                            checked={formData.testMode}
+                            onChange={handleInputChange}
+                            id="testModeCheck"
+                          />
+                          <label className="form-check-label" htmlFor="testModeCheck">
+                            Test Mode
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Pending Codes (comma-separated)</label>
-                    <input
-                      type="text"
-                      name="pendingCodes"
-                      value={formData.pendingCodes.join(', ')}
-                      onChange={handleInputChange}
-                      placeholder="PENDING, PROCESSING, IN_PROGRESS"
-                    />
-                  </div>
-                </div>
+                </form>
               </div>
               
-              <div className="form-row">
-                <div className="form-group checkbox-group">
-                  <label>
-                    <input
-                      type="checkbox"
-                      name="isActive"
-                      checked={formData.isActive}
-                      onChange={handleInputChange}
-                    />
-                    Active
-                  </label>
-                </div>
-                
-                <div className="form-group checkbox-group">
-                  <label>
-                    <input
-                      type="checkbox"
-                      name="testMode"
-                      checked={formData.testMode}
-                      onChange={handleInputChange}
-                    />
-                    Test Mode
-                  </label>
-                </div>
-              </div>
-              
-              <div className="modal-actions">
-                <button type="submit" className="btn btn-primary">
-                  {editingProvider ? 'Update Provider' : 'Create Provider'}
-                </button>
+              <div className="modal-footer">
                 <button 
                   type="button" 
                   className="btn btn-secondary"
@@ -579,8 +615,11 @@ const ApiProviders = () => {
                 >
                   Cancel
                 </button>
+                <button type="submit" form="providerForm" className="btn btn-primary">
+                  {editingProvider ? 'Update Provider' : 'Create Provider'}
+                </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

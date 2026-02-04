@@ -91,6 +91,16 @@ const AdminNavbar = () => {
             <i className="fas fa-qrcode"></i> UPI Barcode Management
           </Link>
         </li>
+        <li className={isActive('/admin/prepaid-cards')}>
+          <Link to="/admin/prepaid-cards">
+            <i className="fas fa-credit-card"></i> Prepaid Cards
+          </Link>
+        </li>
+        <li className={isActive('/admin/rewards')}>
+          <Link to="/admin/rewards">
+            <i className="fas fa-gift"></i> Rewards
+          </Link>
+        </li>
         <li>
           <Link to="/dashboard">
             <i className="fas fa-user"></i> User Dashboard

@@ -5,7 +5,7 @@ class Email {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.url = url;
-    this.from = `Pay4U Support <${process.env.EMAIL_FROM}>`;
+    this.from = `Pay4U Support <${process.env.EMAIL_FROM || process.env.EMAIL_USERNAME || process.env.EMAIL_USER}>`;
   }
 
   newTransport() {
@@ -20,16 +20,18 @@ class Email {
       });
     }
 
-    // Development: Use Gmail SMTP
-    return nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: process.env.EMAIL_USERNAME,
-        pass: process.env.EMAIL_PASSWORD
-      }
-    });
+    if (process.env.EMAIL_HOST && (process.env.EMAIL_USERNAME || process.env.EMAIL_USER)) {
+      return nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: parseInt(process.env.EMAIL_PORT || '587', 10),
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USERNAME || process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS
+        }
+      });
+    }
+    return nodemailer.createTransport({ jsonTransport: true });
   }
 
   // Send the actual email
@@ -72,6 +74,11 @@ class Email {
       'Your password reset token (valid for only 10 minutes)'
     );
   }
+ 
+  async sendPasswordOtp(otp) {
+    this.otp = otp;
+    await this.send('passwordOtp', 'Your Pay4U OTP (valid for 10 minutes)');
+  }
 
   generateHTML(template) {
     if (template === 'welcome') {
@@ -101,6 +108,23 @@ class Email {
         </div>
       `;
     }
+ 
+    if (template === 'passwordOtp') {
+      return `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Password Change OTP</h2>
+          <p>Hi ${this.firstName},</p>
+          <p>Your One-Time Password is:</p>
+          <div style="text-align: center; margin: 20px 0;">
+            <div style="font-size: 28px; letter-spacing: 4px; font-weight: bold;">${this.otp}</div>
+          </div>
+          <p>Use this OTP in the Profile page to change your password.</p>
+          <p>This OTP will expire in 10 minutes.</p>
+          <p>If you did not request this, please ignore this email.</p>
+          <p>Best regards,<br>The Pay4U Team</p>
+        </div>
+      `;
+    }
 
     return '<p>Email template not found</p>';
   }
@@ -112,6 +136,10 @@ class Email {
 
     if (template === 'passwordReset') {
       return `Hi ${this.firstName}, you requested a password reset. Visit this link to reset your password: ${this.url}. This link expires in 10 minutes.`;
+    }
+ 
+    if (template === 'passwordOtp') {
+      return `Hi ${this.firstName}, your OTP is ${this.otp}. It expires in 10 minutes.`;
     }
 
     return 'Email content';

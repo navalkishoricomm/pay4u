@@ -7,6 +7,9 @@ router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
 router.patch('/reset-password/:token', authController.resetPassword);
+router.post('/password-otp', authController.protect, authController.requestPasswordOtp);
+router.post('/change-password-with-otp', authController.protect, authController.changePasswordWithOtp);
+router.post('/test-email', authController.protect, authController.testEmail);
 
 // Protected routes
 router.use(authController.protect);

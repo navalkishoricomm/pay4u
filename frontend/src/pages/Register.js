@@ -74,6 +74,9 @@ const Register = () => {
 
   return (
     <div className="form-container">
+      <div className="text-center mb-4">
+        <img src="/icon.svg" alt="Pay4U Logo" style={{ width: '64px', height: '64px' }} />
+      </div>
       <h1 className="form-title">Create an Account</h1>
       <form onSubmit={handleSubmit}>
         <div className="form-group">

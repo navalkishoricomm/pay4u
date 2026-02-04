@@ -302,12 +302,17 @@ exports.getCircles = catchAsync(async (req, res, next) => {
 
 // Bill payment for other services (electricity, water, gas, broadband, etc.)
 exports.billPayment = catchAsync(async (req, res, next) => {
-  const { serviceType, customerNumber, operator, amount } = req.body;
+  const { serviceType, customerNumber, operator, amount, registeredMobile } = req.body;
   const userId = req.user.id;
 
   // Validate input
   if (!serviceType || !customerNumber || !operator || !amount) {
     return next(new AppError('All fields are required', 400));
+  }
+
+  // Validate registered mobile for credit card payments
+  if (serviceType === 'creditcard' && !registeredMobile) {
+    return next(new AppError('Registered mobile number is required for credit card payments', 400));
   }
 
   // Validate service type
@@ -358,7 +363,8 @@ exports.billPayment = catchAsync(async (req, res, next) => {
       customerNumber,
       operator: operatorConfig,
       amount,
-      userWalletBalance: user.walletBalance
+      userWalletBalance: user.walletBalance,
+      registeredMobile
     });
 
     res.status(200).json({

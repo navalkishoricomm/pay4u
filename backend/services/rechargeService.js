@@ -284,6 +284,10 @@ class RechargeService {
     } else {
       // Other bill payments (utilities, telecom postpaid, broadband, financial services)
       baseData.customerNumber = transaction.rechargeData?.customerNumber || transaction.customerNumber;
+      
+      if (transaction.rechargeData?.registeredMobile) {
+        baseData.registeredMobile = transaction.rechargeData.registeredMobile;
+      }
       // Include any custom fields if configured
     }
 
@@ -442,7 +446,8 @@ class RechargeService {
         planDescription: data.planDescription,
         validity: data.validity,
         talktime: data.talktime,
-        data: data.data
+        data: data.data,
+        registeredMobile: data.registeredMobile
       },
       
       // Processing configuration
@@ -599,7 +604,7 @@ class RechargeService {
    * Process bill payment (utilities, postpaid, broadband, etc.)
    */
   async processBillPayment(billData) {
-    const { userId, serviceType, customerNumber, operator, amount } = billData;
+    const { userId, serviceType, customerNumber, operator, amount, registeredMobile } = billData;
 
     // Validate operator configuration
     if (!operator) {
@@ -631,7 +636,8 @@ class RechargeService {
       operatorCode: operator.operatorCode,
       customerNumber,
       operatorConfig: operator,
-      processingMode: operator.processingMode
+      processingMode: operator.processingMode,
+      registeredMobile
     });
 
     try {

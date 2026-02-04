@@ -17,6 +17,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isBellRinging, setIsBellRinging] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Effective per-user feature visibility with safe defaults
   const perms = (currentUser && currentUser.featurePermissions) || {};
@@ -62,11 +63,36 @@ const Navbar = () => {
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+    setIsUserMenuOpen(false);
   };
+
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(prev => !prev);
+  };
+
+  const goProfile = () => {
+    navigate('/profile');
+    setIsUserMenuOpen(false);
+    setIsMenuOpen(false);
+  };
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isUserMenuOpen && !event.target.closest('.user-info')) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   return (
     <nav className="navbar">
       <Link to="/" className="logo" onClick={closeMenu}>
+        <img src="/icon.svg" alt="Pay4U" style={{ height: '32px', width: '32px' }} />
         Pay4U
       </Link>
 
@@ -81,6 +107,13 @@ const Navbar = () => {
         <span></span>
       </button>
 
+      {/* Mobile Menu Overlay */}
+      <div 
+        className={`nav-overlay ${isMenuOpen ? 'active' : ''}`} 
+        onClick={closeMenu}
+        aria-hidden="true"
+      ></div>
+
       {/* Navigation Menu */}
       <ul className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
         {!isAuthenticated && (
@@ -92,53 +125,53 @@ const Navbar = () => {
         {isAuthenticated ? (
           <>
             <li>
-              <NavLink to="/dashboard">Dashboard</NavLink>
+              <NavLink to="/dashboard" onClick={closeMenu}>Dashboard</NavLink>
             </li>
             <li>
-              <NavLink to="/wallet">Wallet</NavLink>
+              <NavLink to="/wallet" onClick={closeMenu}>Wallet</NavLink>
             </li>
             
             {SHOW_RECHARGES_EFF && (
               <>
-                <li><NavLink to="/mobile-recharge">Mobile Recharge</NavLink></li>
-                <li><NavLink to="/dth-recharge">DTH Recharge</NavLink></li>
+                <li><NavLink to="/mobile-recharge" onClick={closeMenu}>Mobile Recharge</NavLink></li>
+                <li><NavLink to="/dth-recharge" onClick={closeMenu}>DTH Recharge</NavLink></li>
               </>
             )}
             
             {SHOW_BILL_PAYMENTS_EFF && (
-              <li><NavLink to="/bill-payment">Bill Payment</NavLink></li>
+              <li><NavLink to="/bill-payment" onClick={closeMenu}>Bill Payment</NavLink></li>
             )}
             
             {SHOW_MONEY_TRANSFER_EFF && (
-              <li><NavLink to="/money-transfer">Money Transfer</NavLink></li>
+              <li><NavLink to="/money-transfer" onClick={closeMenu}>Money Transfer</NavLink></li>
             )}
             
             {SHOW_AEPS_EFF && (
-              <li><NavLink to="/aeps">AEPS</NavLink></li>
+              <li><NavLink to="/aeps" onClick={closeMenu}>AEPS</NavLink></li>
             )}
 
             <li>
-              <NavLink to="/transactions">Transactions</NavLink>
+              <NavLink to="/transactions" onClick={closeMenu}>Transactions</NavLink>
+            </li>
+            <li>
+              <NavLink to="/notifications" onClick={closeMenu}>Notifications</NavLink>
             </li>
             
-            {SHOW_VOUCHERS_EFF && (
-              <li>
-                <NavLink to="/vouchers">Brand Vouchers</NavLink>
-              </li>
-            )}
-            <li>
-              <NavLink to="/notifications">Notifications</NavLink>
+            {/* Mobile Only Links */}
+            <li className="mobile-only" style={{ display: isMenuOpen ? 'block' : 'none' }}>
+              <NavLink to="/profile" onClick={closeMenu}>Profile</NavLink>
             </li>
-            {currentUser?.role === 'admin' && (
-              <li>
-                <NavLink to="/admin/dashboard" className="admin-link">Admin</NavLink>
-              </li>
-            )}
-            <li>
-              <button onClick={handleLogout} className="btn btn-secondary">
+            <li className="mobile-only" style={{ display: isMenuOpen ? 'block' : 'none' }}>
+              <button onClick={handleLogout} className="btn btn-secondary btn-full">
                 Logout
               </button>
             </li>
+
+            {currentUser?.role === 'admin' && (
+              <li>
+                <NavLink to="/admin/dashboard" className="admin-link" onClick={closeMenu}>Admin</NavLink>
+              </li>
+            )}
           </>
         ) : (
           <>
@@ -152,27 +185,55 @@ const Navbar = () => {
         )}
       </ul>
 
-      {/* Notification Bell - Show on desktop */}
-      {isAuthenticated && (
-        <div className="desktop-notifications">
-          <Link to="/notifications" className="notification-bell">
-            <span className={`bell-icon ${isBellRinging ? 'ring' : ''}`}>🔔</span>
-            {unreadCount > 0 && (
-              <span className="notification-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
-            )}
-          </Link>
-        </div>
-      )}
+      {/* Desktop Right Section */}
+      <div className="desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {/* Notification Bell - Show on desktop */}
+        {isAuthenticated && (
+          <div className="desktop-notifications">
+            <Link to="/notifications" className="notification-bell-btn">
+              <span className={`bell-icon ${isBellRinging ? 'ring' : ''}`}>🔔</span>
+              {unreadCount > 0 && (
+                <span className="notification-dot"></span>
+              )}
+            </Link>
+          </div>
+        )}
 
-      {/* User Info - Show on desktop */}
-      {isAuthenticated && currentUser && (
-        <div className="user-info desktop-only">
-          {currentUser.profilePicture && (
-            <img src={currentUser.profilePicture} alt="Profile" />
-          )}
-          <span>Welcome, {currentUser.name || currentUser.email}</span>
-        </div>
-      )}
+        {/* User Info - Show on desktop */}
+        {isAuthenticated && currentUser && (
+          <div className="user-info desktop-only" style={{ position: 'relative' }}>
+            <button
+              className="user-menu-btn"
+              onClick={toggleUserMenu}
+              aria-haspopup="true"
+              aria-expanded={isUserMenuOpen ? 'true' : 'false'}
+            >
+              <div className="user-avatar">
+                {(currentUser.name || currentUser.email || 'U').charAt(0).toUpperCase()}
+              </div>
+              <span className="user-name">{currentUser.name || currentUser.email}</span>
+              <span style={{ fontSize: 12 }}>▾</span>
+            </button>
+            
+            {isUserMenuOpen && (
+              <div className="user-dropdown-menu">
+                <button
+                  className="dropdown-item"
+                  onClick={goProfile}
+                >
+                  👤 Profile
+                </button>
+                <button
+                  className="dropdown-item"
+                  onClick={handleLogout}
+                >
+                  🚪 Logout
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </nav>
   );
 };

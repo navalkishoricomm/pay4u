@@ -23,6 +23,7 @@ const adminRechargeRoutes = require('./routes/adminRecharge');
 const dmtRoutes = require('./routes/dmt');
 const aepsRoutes = require('./routes/aepsRoutes');
 const auditRoutes = require('./routes/auditRoutes');
+const enkashRoutes = require('./routes/enkashRoutes');
 const upiBarcodeRoutes = require('./routes/upiBarcode');
 const bbpsRoutes = require('./routes/bbps');
 // const chargeSlabRoutes = require('./routes/chargeSlabRoutes');
@@ -77,6 +78,7 @@ app.use('/api/aeps', aepsRoutes);
 app.use('/api/admin/dmt', require('./routes/adminDMT'));
 // app.use('/api/admin/charge-slabs', chargeSlabRoutes);
 app.use('/api/admin/audit', auditRoutes);
+app.use('/api/enkash', enkashRoutes);
 app.use('/api/upi-barcodes', upiBarcodeRoutes);
 app.use('/api/bbps', bbpsRoutes);
 

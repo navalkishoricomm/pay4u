@@ -30,11 +30,12 @@ const BillPayment = () => {
   const [formData, setFormData] = useState({
     billerId: '',
     consumerNumber: '',
+    registeredMobile: '',
     billType: '',
     amount: '',
   });
 
-  const { billerId, consumerNumber, billType, amount } = formData;
+  const { billerId, consumerNumber, registeredMobile, billType, amount } = formData;
 
   // Determine selected operator to check if bill fetch is supported
   const selectedOperator = billType && billerId ? operators[billType]?.find(op => op.code === billerId) : null;
@@ -175,7 +176,8 @@ const BillPayment = () => {
         serviceType: (apiTypeMap[formData.billType] || formData.billType),
         operator: formData.billerId, // backend expects 'operator'
         customerNumber: formData.consumerNumber,
-        amount: parseFloat(formData.amount)
+        amount: parseFloat(formData.amount),
+        registeredMobile: formData.registeredMobile // Add this line
       });
       
       const data = response.data;
@@ -238,6 +240,7 @@ const BillPayment = () => {
                   billType: e.target.value,
                   billerId: '',
                   amount: '',
+                  registeredMobile: '',
                 });
                 setBillInfo(null);
               }}
@@ -284,6 +287,7 @@ const BillPayment = () => {
                billType === 'electricity' ? 'Consumer Number' : 
                billType === 'gas' ? 'Customer ID' : 
                billType === 'water' ? 'Consumer Number' : 
+               billType === 'credit_card' ? 'Credit Card Number' :
                'Consumer Number'}
             </label>
             <input
@@ -301,10 +305,29 @@ const BillPayment = () => {
                 billType === 'electricity' ? 'Consumer Number' : 
                 billType === 'gas' ? 'Customer ID' : 
                 billType === 'water' ? 'Consumer Number' : 
+                billType === 'credit_card' ? 'Credit Card Number' :
                 'Consumer Number'}`}
               required
             />
           </div>
+
+          {billType === 'credit_card' && (
+            <div className="form-group">
+              <label htmlFor="registeredMobile">Registered Phone Number</label>
+              <input
+                type="text"
+                id="registeredMobile"
+                name="registeredMobile"
+                value={registeredMobile}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="Enter Registered Phone Number"
+                required
+                pattern="[0-9]{10}"
+                maxLength="10"
+              />
+            </div>
+          )}
           
           <div className="form-group">
             <label htmlFor="amount">Amount (₹)</label>

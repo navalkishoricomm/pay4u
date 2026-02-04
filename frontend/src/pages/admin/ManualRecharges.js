@@ -11,6 +11,7 @@ const ManualRecharges = () => {
   const [selectedRecharge, setSelectedRecharge] = useState(null);
   const [actionType, setActionType] = useState('');
   const [actionNote, setActionNote] = useState('');
+  const [operatorRefId, setOperatorRefId] = useState('');
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
@@ -20,14 +21,20 @@ const ManualRecharges = () => {
   const fetchManualRecharges = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/admin/recharge/manual?status=${filter}`, {
+      let endpoint = '/api/admin/recharge/manual-transactions/pending';
+      
+      // If filter is not pending, we might need a different endpoint, 
+      // but for now let's focus on pending as that's the core requirement.
+      // We'll add query params if the backend supports them later.
+      
+      const response = await fetch(endpoint, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       const data = await response.json();
       if (data.status === 'success') {
-        setRecharges(data.data);
+        setRecharges(data.data.transactions || []);
       }
     } catch (error) {
       console.error('Error fetching manual recharges:', error);
@@ -39,6 +46,8 @@ const ManualRecharges = () => {
   const handleAction = async (recharge, action) => {
     setSelectedRecharge(recharge);
     setActionType(action);
+    setOperatorRefId(''); // Reset ref ID
+    setActionNote('');
     setShowModal(true);
   };
 
@@ -47,15 +56,19 @@ const ManualRecharges = () => {
 
     try {
       setProcessing(true);
-      const response = await fetch(`/admin/recharge/manual/${selectedRecharge._id}/${actionType}`, {
-        method: 'POST',
+      // Determine status based on action
+      const status = actionType === 'approve' ? 'success' : 'failed';
+      
+      const response = await fetch(`/api/admin/recharge/manual-transactions/${selectedRecharge._id}/approve`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          note: actionNote,
-          processedBy: user._id
+          status,
+          remarks: actionNote,
+          operatorRefId: operatorRefId
         })
       });
 
@@ -64,11 +77,15 @@ const ManualRecharges = () => {
         fetchManualRecharges();
         setShowModal(false);
         setActionNote('');
+        setOperatorRefId('');
         setSelectedRecharge(null);
         setActionType('');
+      } else {
+        alert(data.message || 'Action failed');
       }
     } catch (error) {
       console.error('Error processing action:', error);
+      alert('Error processing action');
     } finally {
       setProcessing(false);
     }
@@ -88,6 +105,7 @@ const ManualRecharges = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'warning';
+      case 'awaiting_approval': return 'warning';
       case 'approved': return 'success';
       case 'rejected': return 'danger';
       case 'processing': return 'info';
@@ -201,7 +219,7 @@ const ManualRecharges = () => {
                   </td>
                   <td>
                     <div className="action-buttons">
-                      {recharge.status === 'pending' && (
+                      {(recharge.status === 'pending' || recharge.status === 'awaiting_approval') && (
                         <>
                           <button 
                             className="btn btn-sm btn-primary"
@@ -323,6 +341,18 @@ const ManualRecharges = () => {
 
               {actionType !== 'view' && (
                 <div className="action-form">
+                  {actionType === 'approve' && (
+                    <div className="form-group">
+                      <label>Operator/Reference Transaction ID:</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={operatorRefId}
+                        onChange={(e) => setOperatorRefId(e.target.value)}
+                        placeholder="Enter operator transaction ID"
+                      />
+                    </div>
+                  )}
                   <div className="form-group">
                     <label>Action Note:</label>
                     <textarea

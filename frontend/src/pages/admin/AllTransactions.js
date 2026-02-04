@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import './AllTransactions.css';
+import './Admin.css';
 
 const AllTransactions = () => {
   const { currentUser } = useAuth();
@@ -271,46 +271,59 @@ const AllTransactions = () => {
      }
    };
 
-  const getStatusClass = (status) => {
+  const getStatusBadge = (status) => {
     switch (status) {
-      case 'completed': return 'status-completed';
-      case 'awaiting_approval': return 'status-pending';
-      case 'approved': return 'status-approved';
-      case 'rejected': return 'status-rejected';
-      case 'failed': return 'status-failed';
-      default: return '';
+      case 'completed': return 'bg-success';
+      case 'awaiting_approval': return 'bg-warning text-dark';
+      case 'approved': return 'bg-info text-white';
+      case 'rejected': return 'bg-danger';
+      case 'failed': return 'bg-danger';
+      default: return 'bg-secondary';
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading transactions...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error-message">{error}</div>;
+    return <div className="alert alert-danger m-4">{error}</div>;
   }
 
   return (
-    <div className="all-transactions">
-      <div className="page-header">
+    <div className="admin-page">
+      <div className="admin-header">
         <h1>All Transactions</h1>
         <button 
-          className="btn btn-secondary" 
+          className="btn btn-outline-secondary" 
           onClick={() => navigate('/admin/dashboard')}
         >
+          <i className="bi bi-arrow-left me-2"></i>
           Back to Dashboard
         </button>
       </div>
       
-      <div className="filters-section">
-        <h3>Filter Transactions</h3>
-        <form onSubmit={handleFilterSubmit} className="filters-form">
-          <div className="filters-row">
-            <div className="form-group">
-              <label htmlFor="type">Type</label>
+      <div className="admin-card">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="mb-0">Filter Transactions</h5>
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={handleClearFilters}>
+            <i className="bi bi-x-circle me-1"></i> Clear Filters
+          </button>
+        </div>
+        <form onSubmit={handleFilterSubmit}>
+          <div className="row g-3">
+            <div className="col-md-3">
+              <label htmlFor="type" className="form-label small text-muted">Type</label>
               <select 
                 id="type" 
                 name="type" 
+                className="form-select form-select-sm"
                 value={filters.type} 
                 onChange={handleFilterChange}
               >
@@ -322,11 +335,12 @@ const AllTransactions = () => {
               </select>
             </div>
             
-            <div className="form-group">
-              <label htmlFor="status">Status</label>
+            <div className="col-md-3">
+              <label htmlFor="status" className="form-label small text-muted">Status</label>
               <select 
                 id="status" 
                 name="status" 
+                className="form-select form-select-sm"
                 value={filters.status} 
                 onChange={handleFilterChange}
               >
@@ -339,11 +353,12 @@ const AllTransactions = () => {
               </select>
             </div>
             
-            <div className="form-group">
-              <label htmlFor="operator">Operator</label>
+            <div className="col-md-3">
+              <label htmlFor="operator" className="form-label small text-muted">Operator</label>
               <select 
                 id="operator" 
                 name="operator" 
+                className="form-select form-select-sm"
                 value={filters.operator} 
                 onChange={handleFilterChange}
               >
@@ -358,38 +373,13 @@ const AllTransactions = () => {
                 <option value="videocon">Videocon</option>
               </select>
             </div>
-          </div>
-          
-          <div className="filters-row">
-            <div className="form-group">
-              <label htmlFor="userName">User Name</label>
-              <input 
-                type="text" 
-                id="userName" 
-                name="userName" 
-                value={filters.userName} 
-                onChange={handleFilterChange}
-                placeholder="Search by user name"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="userEmail">User Email</label>
-              <input 
-                type="email" 
-                id="userEmail" 
-                name="userEmail" 
-                value={filters.userEmail} 
-                onChange={handleFilterChange}
-                placeholder="Search by user email"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="apiProvider">API Provider</label>
+
+            <div className="col-md-3">
+              <label htmlFor="apiProvider" className="form-label small text-muted">API Provider</label>
               <select 
                 id="apiProvider" 
                 name="apiProvider" 
+                className="form-select form-select-sm"
                 value={filters.apiProvider} 
                 onChange={handleFilterChange}
               >
@@ -399,36 +389,89 @@ const AllTransactions = () => {
                 <option value="manual">Manual</option>
               </select>
             </div>
-          </div>
-          
-          <div className="filters-row">
-            <div className="form-group">
-              <label htmlFor="startDate">Start Date</label>
+            
+            <div className="col-md-3">
+              <label htmlFor="userName" className="form-label small text-muted">User Name</label>
+              <input 
+                type="text" 
+                id="userName" 
+                name="userName" 
+                className="form-control form-control-sm"
+                value={filters.userName} 
+                onChange={handleFilterChange}
+                placeholder="Search by user name"
+              />
+            </div>
+            
+            <div className="col-md-3">
+              <label htmlFor="userEmail" className="form-label small text-muted">User Email</label>
+              <input 
+                type="email" 
+                id="userEmail" 
+                name="userEmail" 
+                className="form-control form-control-sm"
+                value={filters.userEmail} 
+                onChange={handleFilterChange}
+                placeholder="Search by user email"
+              />
+            </div>
+            
+            <div className="col-md-3">
+              <label htmlFor="startDate" className="form-label small text-muted">Start Date</label>
               <input 
                 type="date" 
                 id="startDate" 
                 name="startDate" 
+                className="form-control form-control-sm"
                 value={filters.startDate} 
                 onChange={handleFilterChange}
               />
             </div>
             
-            <div className="form-group">
-              <label htmlFor="endDate">End Date</label>
+            <div className="col-md-3">
+              <label htmlFor="endDate" className="form-label small text-muted">End Date</label>
               <input 
                 type="date" 
                 id="endDate" 
                 name="endDate" 
+                className="form-control form-control-sm"
                 value={filters.endDate} 
                 onChange={handleFilterChange}
               />
             </div>
+
+            <div className="col-md-3">
+              <label htmlFor="minAmount" className="form-label small text-muted">Min Amount (₹)</label>
+              <input 
+                type="number" 
+                id="minAmount" 
+                name="minAmount" 
+                className="form-control form-control-sm"
+                value={filters.minAmount} 
+                onChange={handleFilterChange}
+                min="0"
+              />
+            </div>
             
-            <div className="form-group">
-              <label htmlFor="limit">Results per page</label>
+            <div className="col-md-3">
+              <label htmlFor="maxAmount" className="form-label small text-muted">Max Amount (₹)</label>
+              <input 
+                type="number" 
+                id="maxAmount" 
+                name="maxAmount" 
+                className="form-control form-control-sm"
+                value={filters.maxAmount} 
+                onChange={handleFilterChange}
+                min="0"
+              />
+            </div>
+
+            <div className="col-md-3">
+              <label htmlFor="limit" className="form-label small text-muted">Results per page</label>
               <select 
                 id="limit" 
                 name="limit" 
+                className="form-select form-select-sm"
                 value={filters.limit} 
                 onChange={handleFilterChange}
               >
@@ -438,208 +481,217 @@ const AllTransactions = () => {
                 <option value="100">100</option>
               </select>
             </div>
-          </div>
-          
-          <div className="filters-row">
-            <div className="form-group">
-              <label htmlFor="minAmount">Min Amount (₹)</label>
-              <input 
-                type="number" 
-                id="minAmount" 
-                name="minAmount" 
-                value={filters.minAmount} 
-                onChange={handleFilterChange}
-                min="0"
-              />
+
+            <div className="col-md-3 d-flex align-items-end">
+               <button type="submit" className="btn btn-primary btn-sm w-100">
+                 <i className="bi bi-funnel me-1"></i> Apply Filters
+               </button>
             </div>
-            
-            <div className="form-group">
-              <label htmlFor="maxAmount">Max Amount (₹)</label>
-              <input 
-                type="number" 
-                id="maxAmount" 
-                name="maxAmount" 
-                value={filters.maxAmount} 
-                onChange={handleFilterChange}
-                min="0"
-              />
-            </div>
-          </div>
-          
-          <div className="filters-actions">
-            <button type="submit" className="btn btn-primary">Apply Filters</button>
-            <button type="button" className="btn btn-secondary" onClick={handleClearFilters}>Clear Filters</button>
           </div>
         </form>
       </div>
       
       {selectedTransactions.length > 0 && (
-        <div className="bulk-actions">
-          <div className="bulk-info">
-            <span>{selectedTransactions.length} transaction(s) selected</span>
+        <div className="alert alert-info d-flex justify-content-between align-items-center mb-3 p-2">
+          <div className="d-flex align-items-center">
+             <i className="bi bi-check-circle-fill me-2"></i>
+             <span>{selectedTransactions.length} transaction(s) selected</span>
           </div>
-          <div className="bulk-buttons">
+          <div className="btn-group btn-group-sm">
             <button 
               className="btn btn-success" 
               onClick={handleBulkApprove}
               disabled={bulkLoading}
             >
-              {bulkLoading ? 'Processing...' : 'Bulk Approve'}
+              {bulkLoading ? '...' : 'Approve'}
             </button>
             <button 
               className="btn btn-danger" 
               onClick={handleBulkReject}
               disabled={bulkLoading}
             >
-              {bulkLoading ? 'Processing...' : 'Bulk Reject'}
+              {bulkLoading ? '...' : 'Reject'}
             </button>
             <button 
               className="btn btn-warning" 
               onClick={handleBulkChangeToAwaiting}
               disabled={bulkLoading}
             >
-              {bulkLoading ? 'Processing...' : 'Change to Awaiting'}
+              {bulkLoading ? '...' : 'Wait'}
             </button>
           </div>
         </div>
       )}
       
-      {transactions.length === 0 ? (
-        <div className="no-transactions">
-          <p>No transactions found matching the selected filters.</p>
-        </div>
-      ) : (
-        <div className="transactions-table-container">
-          <div className="table-header">
-            <div className="table-info">
-              <span>Showing {pagination.results} of {pagination.total} transactions</span>
+      <div className="admin-card table-responsive">
+        {transactions.length === 0 ? (
+           <div className="text-center py-5 text-muted">
+             <i className="bi bi-search fs-1 d-block mb-3"></i>
+             <p>No transactions found matching the selected filters.</p>
+           </div>
+        ) : (
+          <>
+            <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
+              <small className="text-muted">Showing {pagination.results} of {pagination.total} transactions</small>
             </div>
-          </div>
-          
-          <table className="transactions-table">
-            <thead>
-              <tr>
-                <th>
-                  <input 
-                    type="checkbox" 
-                    checked={selectedTransactions.length === transactions.length && transactions.length > 0}
-                    onChange={handleSelectAll}
-                  />
-                </th>
-                <th>ID</th>
-                <th>User</th>
-                <th>Type</th>
-                <th>Operator</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Reference</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map(transaction => (
-                <tr key={transaction._id}>
-                  <td>
+            
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th style={{width: '40px'}}>
                     <input 
                       type="checkbox" 
-                      checked={selectedTransactions.includes(transaction._id)}
-                      onChange={() => handleSelectTransaction(transaction._id)}
+                      className="form-check-input"
+                      checked={selectedTransactions.length === transactions.length && transactions.length > 0}
+                      onChange={handleSelectAll}
                     />
-                  </td>
-                  <td>{transaction._id ? transaction._id.substring(0, 8) + '...' : 'N/A'}</td>
-                  <td>
-                    {transaction.wallet?.user?.name || 'N/A'}<br />
-                    <small>{transaction.wallet?.user?.email || 'N/A'}</small>
-                  </td>
-                  <td>{transaction.type}</td>
-                  <td>{transaction.operator || 'N/A'}</td>
-                  <td className="amount">₹{transaction.amount}</td>
-                  <td>
-                    <span className={`status-badge ${getStatusClass(transaction.status)}`}>
-                      {transaction.status}
-                    </span>
-                  </td>
-                  <td>{new Date(transaction.createdAt).toLocaleString()}</td>
-                  <td>{transaction.reference || 'N/A'}</td>
-                  <td className="actions">
-                    {transaction.status === 'awaiting_approval' && (
-                      <>
-                        <button 
-                          className="btn btn-sm btn-success"
-                          onClick={() => handleSingleApprove(transaction._id)}
-                          title="Approve"
-                        >
-                          ✓
-                        </button>
-                        <button 
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleSingleReject(transaction._id)}
-                          title="Reject"
-                        >
-                          ✗
-                        </button>
-                      </>
-                    )}
-                    {transaction.status !== 'awaiting_approval' && (
-                      <>
-                        <button 
-                          className="btn btn-sm btn-warning"
-                          onClick={() => handleChangeToAwaiting(transaction._id)}
-                          title="Change to Awaiting Approval"
-                        >
-                          ⏳
-                        </button>
-                        {(transaction.status === 'approved' || transaction.status === 'rejected') && (
+                  </th>
+                  <th>ID</th>
+                  <th>User</th>
+                  <th>Type</th>
+                  <th>Operator</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Reference</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map(transaction => (
+                  <tr key={transaction._id}>
+                    <td>
+                      <input 
+                        type="checkbox" 
+                        className="form-check-input"
+                        checked={selectedTransactions.includes(transaction._id)}
+                        onChange={() => handleSelectTransaction(transaction._id)}
+                      />
+                    </td>
+                    <td><small className="text-muted font-monospace">{transaction._id ? transaction._id.substring(0, 8) + '...' : 'N/A'}</small></td>
+                    <td>
+                      <div className="fw-medium">{transaction.wallet?.user?.name || 'N/A'}</div>
+                      <small className="text-muted">{transaction.wallet?.user?.email || 'N/A'}</small>
+                    </td>
+                    <td><span className="badge bg-light text-dark border">{transaction.type}</span></td>
+                    <td>{transaction.operator || '-'}</td>
+                    <td className="fw-bold text-dark">₹{transaction.amount}</td>
+                    <td>
+                      <span className={`badge ${getStatusBadge(transaction.status)}`}>
+                        {transaction.status}
+                      </span>
+                    </td>
+                    <td className="small">{new Date(transaction.createdAt).toLocaleString()}</td>
+                    <td className="small text-muted">{transaction.reference || '-'}</td>
+                    <td>
+                      <div className="btn-group btn-group-sm">
+                        {transaction.status === 'awaiting_approval' && (
                           <>
                             <button 
-                              className="btn btn-sm btn-success"
+                              className="btn btn-outline-success"
                               onClick={() => handleSingleApprove(transaction._id)}
                               title="Approve"
                             >
-                              ✓
+                              <i className="bi bi-check-lg"></i>
                             </button>
                             <button 
-                              className="btn btn-sm btn-danger"
+                              className="btn btn-outline-danger"
                               onClick={() => handleSingleReject(transaction._id)}
                               title="Reject"
                             >
-                              ✗
+                              <i className="bi bi-x-lg"></i>
                             </button>
                           </>
                         )}
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          {pagination.pages > 1 && (
-            <div className="pagination">
+                        {transaction.status !== 'awaiting_approval' && (
+                          <>
+                            <button 
+                              className="btn btn-outline-warning"
+                              onClick={() => handleChangeToAwaiting(transaction._id)}
+                              title="Change to Awaiting Approval"
+                            >
+                              <i className="bi bi-hourglass-split"></i>
+                            </button>
+                            {(transaction.status === 'approved' || transaction.status === 'rejected') && (
+                              <>
+                                <button 
+                                  className="btn btn-outline-success"
+                                  onClick={() => handleSingleApprove(transaction._id)}
+                                  title="Approve"
+                                >
+                                  <i className="bi bi-check-lg"></i>
+                                </button>
+                                <button 
+                                  className="btn btn-outline-danger"
+                                  onClick={() => handleSingleReject(transaction._id)}
+                                  title="Reject"
+                                >
+                                  <i className="bi bi-x-lg"></i>
+                                </button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {pagination.pages > 1 && (
+        <nav aria-label="Page navigation" className="d-flex justify-content-center mt-4">
+          <ul className="pagination">
+            <li className={`page-item ${pagination.page === 1 ? 'disabled' : ''}`}>
               <button 
-                className="btn btn-sm btn-secondary"
+                className="page-link" 
                 onClick={() => handlePageChange(pagination.page - 1)}
                 disabled={pagination.page === 1}
               >
                 Previous
               </button>
+            </li>
+            
+            {[...Array(Math.min(5, pagination.pages))].map((_, idx) => {
+              // Logic to show pages around current page
+              let pageNum = pagination.page;
+              if (pagination.pages <= 5) {
+                pageNum = idx + 1;
+              } else if (pagination.page <= 3) {
+                pageNum = idx + 1;
+              } else if (pagination.page >= pagination.pages - 2) {
+                pageNum = pagination.pages - 4 + idx;
+              } else {
+                pageNum = pagination.page - 2 + idx;
+              }
               
-              <span className="page-info">
-                Page {pagination.page} of {pagination.pages}
-              </span>
-              
+              return (
+                <li key={pageNum} className={`page-item ${pagination.page === pageNum ? 'active' : ''}`}>
+                  <button 
+                    className="page-link" 
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                </li>
+              );
+            })}
+            
+            <li className={`page-item ${pagination.page === pagination.pages ? 'disabled' : ''}`}>
               <button 
-                className="btn btn-sm btn-secondary"
+                className="page-link" 
                 onClick={() => handlePageChange(pagination.page + 1)}
                 disabled={pagination.page === pagination.pages}
               >
                 Next
               </button>
-            </div>
-          )}
-        </div>
+            </li>
+          </ul>
+        </nav>
       )}
     </div>
   );

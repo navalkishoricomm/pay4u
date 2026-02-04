@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
+const crypto = require('crypto');
+const Email = require('../utils/email');
 
 // Helper function to sign JWT token
 const signToken = (id) => {
@@ -204,6 +206,74 @@ exports.getMe = (req, res, next) => {
       status: 'fail',
       message: error.message
     });
+  }
+};
+
+exports.requestPasswordOtp = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ status: 'fail', message: 'User not found' });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.passwordOtpCode = otp;
+    user.passwordOtpExpires = Date.now() + 10 * 60 * 1000;
+    await user.save({ validateBeforeSave: false });
+    const email = new Email(user, '');
+    await email.sendPasswordOtp(otp);
+    console.log('Password OTP generated for user:', user.email, otp);
+    res.status(200).json({ status: 'success', message: 'OTP sent to registered email' });
+  } catch (error) {
+    res.status(400).json({ status: 'fail', message: error.message });
+  }
+};
+
+exports.changePasswordWithOtp = async (req, res) => {
+  try {
+    const { otp, password } = req.body;
+    if (!otp || !password) {
+      return res.status(400).json({ status: 'fail', message: 'OTP and password are required' });
+    }
+    const user = await User.findById(req.user.id).select('+password');
+    if (!user) {
+      return res.status(404).json({ status: 'fail', message: 'User not found' });
+    }
+    if (!user.passwordOtpCode || !user.passwordOtpExpires) {
+      return res.status(400).json({ status: 'fail', message: 'No active OTP. Request a new one.' });
+    }
+    if (Date.now() > user.passwordOtpExpires) {
+      user.passwordOtpCode = undefined;
+      user.passwordOtpExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+      return res.status(400).json({ status: 'fail', message: 'OTP expired. Request a new one.' });
+    }
+    if (user.passwordOtpCode !== otp) {
+      return res.status(400).json({ status: 'fail', message: 'Invalid OTP' });
+    }
+    user.password = password;
+    user.passwordOtpCode = undefined;
+    user.passwordOtpExpires = undefined;
+    await user.save();
+    createSendToken(user, 200, res);
+  } catch (error) {
+    res.status(400).json({ status: 'fail', message: error.message });
+  }
+};
+
+exports.testEmail = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ status: 'fail', message: 'User not found' });
+    }
+    const email = new Email(user, `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`);
+    await email.sendWelcome();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    email.otp = otp;
+    await email.send('passwordOtp', 'Your Pay4U OTP (valid for 10 minutes)');
+    res.status(200).json({ status: 'success', message: 'Test emails sent (welcome and OTP)' });
+  } catch (error) {
+    res.status(400).json({ status: 'fail', message: error.message });
   }
 };
 

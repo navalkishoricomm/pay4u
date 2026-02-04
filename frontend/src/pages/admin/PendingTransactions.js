@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import axios from 'axios';
-import './PendingTransactions.css';
+import './Admin.css';
 
 const PendingTransactions = () => {
   const { currentUser } = useAuth();
@@ -122,139 +122,143 @@ const PendingTransactions = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading pending transactions...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error-message">{error}</div>;
+    return <div className="alert alert-danger m-4">{error}</div>;
   }
 
   return (
-    <div className="pending-transactions">
-      <div className="page-header">
+    <div className="admin-page">
+      <div className="admin-header">
         <h1>Pending Transactions</h1>
         <button 
-          className="btn btn-secondary" 
+          className="btn btn-outline-secondary" 
           onClick={() => navigate('/admin/dashboard')}
         >
+          <i className="bi bi-arrow-left me-2"></i>
           Back to Dashboard
         </button>
       </div>
       
-      {transactions.length === 0 ? (
-        <div className="no-transactions">
-          <p>No pending transactions found.</p>
-        </div>
-      ) : (
-        <div className="transactions-list">
-          {transactions.map(transaction => (
-            <div key={transaction._id} className="transaction-card">
-              <div className="transaction-header">
-                <h3>Transaction #{transaction._id ? transaction._id.substring(0, 8) : 'N/A'}</h3>
-                <span className="transaction-date">
-                  {new Date(transaction.createdAt).toLocaleString()}
-                </span>
-              </div>
-              
-              <div className="transaction-details">
-                <div className="detail-row">
-                  <span className="detail-label">User:</span>
-                  <span className="detail-value">{transaction.wallet?.user?.name || 'N/A'}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Email:</span>
-                  <span className="detail-value">{transaction.wallet?.user?.email || 'N/A'}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Phone:</span>
-                  <span className="detail-value">{transaction.wallet?.user?.phone || 'N/A'}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Amount:</span>
-                  <span className="detail-value amount">₹{transaction.amount}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Type:</span>
-                  <span className="detail-value">{transaction.type}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Description:</span>
-                  <span className="detail-value">{transaction.description}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Payment Method:</span>
-                  <span className="detail-value">
-                    {transaction.metadata?.paymentMethod || 'N/A'}
-                    {transaction.metadata?.cardLast4 && ` (**** **** **** ${transaction.metadata.cardLast4})`}
-                    {transaction.metadata?.bankReference && ` (Ref: ${transaction.metadata.bankReference})`}
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Reference:</span>
-                  <span className="detail-value">{transaction.reference}</span>
-                </div>
-              </div>
-              
-              <div className="transaction-actions">
-                <button 
-                  className="btn btn-success" 
-                  onClick={() => openApprovalModal(transaction)}
-                  disabled={processingId === transaction._id}
-                >
-                  {processingId === transaction._id ? 'Processing...' : 'Approve'}
-                </button>
-                <button 
-                  className="btn btn-danger" 
-                  onClick={() => openRejectionModal(transaction)}
-                  disabled={processingId === transaction._id}
-                >
-                  {processingId === transaction._id ? 'Processing...' : 'Reject'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="admin-card table-responsive">
+        {transactions.length === 0 ? (
+          <div className="text-center py-5 text-muted">
+            <i className="bi bi-check2-all fs-1 d-block mb-3"></i>
+            <p>No pending transactions found.</p>
+          </div>
+        ) : (
+          <table className="table table-hover align-middle mb-0">
+            <thead className="table-light">
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Payment Method</th>
+                <th>Reference</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map(transaction => (
+                <tr key={transaction._id}>
+                  <td><small className="text-muted font-monospace">{transaction._id ? transaction._id.substring(0, 8) : 'N/A'}</small></td>
+                  <td>
+                    <div className="fw-medium">{transaction.wallet?.user?.name || 'N/A'}</div>
+                    <small className="text-muted">{transaction.wallet?.user?.email || 'N/A'}</small>
+                    <div className="small text-muted">{transaction.wallet?.user?.phone || 'N/A'}</div>
+                  </td>
+                  <td className="fw-bold text-dark">₹{transaction.amount}</td>
+                  <td><span className="badge bg-light text-dark border">{transaction.type}</span></td>
+                  <td>
+                    <div className="small">
+                      {transaction.metadata?.paymentMethod || 'N/A'}
+                      {transaction.metadata?.cardLast4 && ` (**** ${transaction.metadata.cardLast4})`}
+                    </div>
+                    {transaction.metadata?.bankReference && <div className="small text-muted">Ref: {transaction.metadata.bankReference}</div>}
+                  </td>
+                  <td className="small text-muted">{transaction.reference}</td>
+                  <td className="small">{new Date(transaction.createdAt).toLocaleString()}</td>
+                  <td>
+                    <div className="btn-group btn-group-sm">
+                      <button 
+                        className="btn btn-success" 
+                        onClick={() => openApprovalModal(transaction)}
+                        disabled={processingId === transaction._id}
+                        title="Approve"
+                      >
+                        {processingId === transaction._id ? '...' : <i className="bi bi-check-lg"></i>}
+                      </button>
+                      <button 
+                        className="btn btn-danger" 
+                        onClick={() => openRejectionModal(transaction)}
+                        disabled={processingId === transaction._id}
+                        title="Reject"
+                      >
+                        {processingId === transaction._id ? '...' : <i className="bi bi-x-lg"></i>}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
       
       {/* Approval Modal */}
       {showApprovalModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Approve Transaction</h3>
-              <button className="close-btn" onClick={closeModals}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label htmlFor="transactionId">Transaction ID (Optional)</label>
-                <input
-                  type="text"
-                  id="transactionId"
-                  value={transactionId}
-                  onChange={(e) => setTransactionId(e.target.value)}
-                  placeholder="Enter transaction ID from payment gateway"
-                />
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Approve Transaction</h5>
+                <button type="button" className="btn-close" onClick={closeModals}></button>
               </div>
-              <div className="form-group">
-                <label htmlFor="approvalNotes">Notes (Optional)</label>
-                <textarea
-                  id="approvalNotes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add any notes about this approval"
-                  rows="3"
-                />
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label htmlFor="transactionId" className="form-label">Transaction ID (Optional)</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="transactionId"
+                    value={transactionId}
+                    onChange={(e) => setTransactionId(e.target.value)}
+                    placeholder="Enter transaction ID from payment gateway"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="approvalNotes" className="form-label">Notes (Optional)</label>
+                  <textarea
+                    className="form-control"
+                    id="approvalNotes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add any notes about this approval"
+                    rows="3"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModals}>Cancel</button>
-              <button 
-                className="btn btn-success" 
-                onClick={handleApproval}
-                disabled={processingId === selectedTransaction?._id}
-              >
-                {processingId === selectedTransaction?._id ? 'Processing...' : 'Approve Transaction'}
-              </button>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeModals}>Cancel</button>
+                <button 
+                  type="button" 
+                  className="btn btn-success" 
+                  onClick={handleApproval}
+                  disabled={processingId === selectedTransaction?._id}
+                >
+                  {processingId === selectedTransaction?._id ? 'Processing...' : 'Approve Transaction'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -262,44 +266,49 @@ const PendingTransactions = () => {
       
       {/* Rejection Modal */}
       {showRejectionModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Reject Transaction</h3>
-              <button className="close-btn" onClick={closeModals}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label htmlFor="failureReason">Failure Reason</label>
-                <input
-                  type="text"
-                  id="failureReason"
-                  value={failureReason}
-                  onChange={(e) => setFailureReason(e.target.value)}
-                  placeholder="Enter reason for rejection"
-                  required
-                />
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Reject Transaction</h5>
+                <button type="button" className="btn-close" onClick={closeModals}></button>
               </div>
-              <div className="form-group">
-                <label htmlFor="rejectionNotes">Additional Notes (Optional)</label>
-                <textarea
-                  id="rejectionNotes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add any additional notes"
-                  rows="3"
-                />
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label htmlFor="failureReason" className="form-label">Failure Reason <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="failureReason"
+                    value={failureReason}
+                    onChange={(e) => setFailureReason(e.target.value)}
+                    placeholder="Enter reason for rejection"
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="rejectionNotes" className="form-label">Additional Notes (Optional)</label>
+                  <textarea
+                    className="form-control"
+                    id="rejectionNotes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add any additional notes"
+                    rows="3"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModals}>Cancel</button>
-              <button 
-                className="btn btn-danger" 
-                onClick={handleRejection}
-                disabled={processingId === selectedTransaction?._id || !failureReason.trim()}
-              >
-                {processingId === selectedTransaction?._id ? 'Processing...' : 'Reject Transaction'}
-              </button>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeModals}>Cancel</button>
+                <button 
+                  type="button" 
+                  className="btn btn-danger" 
+                  onClick={handleRejection}
+                  disabled={processingId === selectedTransaction?._id || !failureReason.trim()}
+                >
+                  {processingId === selectedTransaction?._id ? 'Processing...' : 'Reject Transaction'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

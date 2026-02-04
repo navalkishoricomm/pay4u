@@ -30,6 +30,7 @@ import Transactions from './pages/Transactions';
 import MoneyTransfer from './pages/MoneyTransfer';
 import AEPS from './pages/AEPS';
 import NotFound from './pages/NotFound';
+import Profile from './pages/Profile';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -50,6 +51,8 @@ import UserNotifications from './components/UserNotifications';
 import ChargeSlabManagement from './components/admin/ChargeSlabManagement';
 import AuditDashboard from './components/admin/AuditDashboard';
 import UPIBarcodeManager from './components/admin/UPIBarcodeManager';
+import PrepaidCards from './pages/admin/PrepaidCards';
+import Rewards from './pages/admin/Rewards';
 
 // Context
 import { useAuth } from './context/AuthContext';
@@ -167,6 +170,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Wallet />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } 
           />
@@ -398,13 +409,29 @@ function App() {
               }
             />
             <Route
-              path="/admin/upi-barcodes"
-              element={
-                <AdminRoute>
-                  <UPIBarcodeManager />
-                </AdminRoute>
-              }
-            />
+              path="/admin/upi-barcodes" 
+             element={
+               <AdminRoute>
+                 <UPIBarcodeManager />
+               </AdminRoute>
+             } 
+           />
+           <Route 
+             path="/admin/prepaid-cards" 
+             element={
+               <AdminRoute>
+                 <PrepaidCards />
+               </AdminRoute>
+             } 
+           />
+           <Route 
+             path="/admin/rewards" 
+             element={
+               <AdminRoute>
+                 <Rewards />
+               </AdminRoute>
+             } 
+           />
            
            {/* Debug Routes */}
                   <Route path="/debug/amount-input" element={<AmountInputTest />} />
